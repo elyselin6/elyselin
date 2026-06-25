@@ -1,13 +1,12 @@
 import { useEffect, useRef, useCallback } from 'react'
 import * as THREE from 'three'
+import { OrbitControls } from 'three-stdlib'
 import { getGlobeLocations, getLocationsForMarker, type LocationData } from '../data/locations'
 import gsap from 'gsap'
 
-const ROTATE_SENSITIVITY = 0.005
-const AUTO_ROTATE_SPEED = 0.0015
 const DRAG_THRESHOLD = 5
-const MIN_ZOOM = 150
-const MAX_ZOOM = 400
+const MIN_ZOOM_DISTANCE = 95
+const MAX_ZOOM_DISTANCE = 480
 
 interface GlobeProps {
   onDotClick: (locations: LocationData[]) => void
@@ -442,7 +441,7 @@ function getMarkerBaseScale(marker: THREE.Object3D): number {
   const locationId = (marker.userData.location as LocationData).id
   let scale = 1
   if (locationId === 'taipei' || locationId === 'madrid') scale = 1.05
-  else if (locationId === 'kuala-lumpur') scale = 1.05 * 1.2
+  else if (locationId === 'kuala-lumpur') scale = 1.05 * 1.44
   else if (isGoldLocation(locationId)) scale = 1.15
   if (usesDotMarker(locationId)) scale *= DOT_MARKER_SIZE_MULTIPLIER
   return scale * MARKER_SIZE_MULTIPLIER
@@ -464,12 +463,11 @@ export default function Globe({ onDotClick, onDotHover, activeLocationId }: Glob
   const mouseRef = useRef(new THREE.Vector2())
   const hoveredDotRef = useRef<number | null>(null)
   const rafRef = useRef<number>(0)
+  const controlsRef = useRef<OrbitControls | null>(null)
   const isAnimatingCameraRef = useRef(false)
   const autoRotatePausedRef = useRef(false)
-  const isDraggingRef = useRef(false)
   const hasDraggedRef = useRef(false)
   const dragStartRef = useRef({ x: 0, y: 0 })
-  const lastPointerRef = useRef({ x: 0, y: 0 })
 
   const handleDotClick = useCallback((clickedLocations: LocationData[]) => {
     onDotClick(clickedLocations)
@@ -498,8 +496,26 @@ export default function Globe({ onDotClick, onDotHover, activeLocationId }: Glob
       renderer.domElement.style.width = '100%'
       renderer.domElement.style.height = '100%'
       renderer.domElement.style.display = 'block'
+      renderer.domElement.style.cursor = 'crosshair'
       container.appendChild(renderer.domElement)
       rendererRef.current = renderer
+
+      const controls = new OrbitControls(camera, renderer.domElement)
+      controls.enablePan = false
+      controls.enableDamping = true
+      controls.dampingFactor = 0.08
+      controls.rotateSpeed = 0.85
+      controls.zoomSpeed = 1.1
+      controls.minDistance = MIN_ZOOM_DISTANCE
+      controls.maxDistance = MAX_ZOOM_DISTANCE
+      controls.autoRotate = true
+      controls.autoRotateSpeed = 0.45
+      controlsRef.current = controls
+
+      controls.addEventListener('start', () => {
+        controls.autoRotate = false
+        autoRotatePausedRef.current = true
+      })
 
       // Lighting
       const ambientLight = new THREE.AmbientLight(0x404040, 0.6)
@@ -623,6 +639,8 @@ export default function Globe({ onDotClick, onDotHover, activeLocationId }: Glob
 
         autoRotatePausedRef.current = true
         isAnimatingCameraRef.current = true
+        controls.enabled = false
+        controls.autoRotate = false
 
         const targetPos = latLngToVector3(lat, lng, 180)
 
@@ -634,9 +652,12 @@ export default function Globe({ onDotClick, onDotHover, activeLocationId }: Glob
           ease: 'power3.out',
           onUpdate: () => {
             camera.lookAt(0, 0, 0)
+            controls.update()
           },
           onComplete: () => {
             isAnimatingCameraRef.current = false
+            controls.enabled = true
+            controls.update()
           },
         })
 
@@ -647,26 +668,13 @@ export default function Globe({ onDotClick, onDotHover, activeLocationId }: Glob
     const onPointerDown = (event: PointerEvent) => {
       if (isAnimatingCameraRef.current) return
 
-      isDraggingRef.current = true
       hasDraggedRef.current = false
       dragStartRef.current = { x: event.clientX, y: event.clientY }
-      lastPointerRef.current = { x: event.clientX, y: event.clientY }
-      renderer.domElement.setPointerCapture(event.pointerId)
     }
 
     const onPointerMove = (event: PointerEvent) => {
       mouseRef.current.x = (event.clientX / window.innerWidth) * 2 - 1
       mouseRef.current.y = -(event.clientY / window.innerHeight) * 2 + 1
-
-      if (!isDraggingRef.current || isAnimatingCameraRef.current) return
-
-      const deltaX = event.clientX - lastPointerRef.current.x
-      const deltaY = event.clientY - lastPointerRef.current.y
-
-      globeGroup.rotation.y += deltaX * ROTATE_SENSITIVITY
-      globeGroup.rotation.x += deltaY * ROTATE_SENSITIVITY
-
-      lastPointerRef.current = { x: event.clientX, y: event.clientY }
 
       const totalDrag = Math.hypot(
         event.clientX - dragStartRef.current.x,
@@ -678,32 +686,15 @@ export default function Globe({ onDotClick, onDotHover, activeLocationId }: Glob
     }
 
     const onPointerUp = (event: PointerEvent) => {
-      if (isDraggingRef.current && !hasDraggedRef.current && !isAnimatingCameraRef.current) {
+      if (!hasDraggedRef.current && !isAnimatingCameraRef.current) {
         trySelectDot(event.clientX, event.clientY)
       }
-
-      isDraggingRef.current = false
-      if (renderer.domElement.hasPointerCapture(event.pointerId)) {
-        renderer.domElement.releasePointerCapture(event.pointerId)
-      }
-    }
-
-    const onWheel = (event: WheelEvent) => {
-      event.preventDefault()
-      const distance = camera.position.length()
-      const nextDistance = THREE.MathUtils.clamp(
-        distance + event.deltaY * 0.05,
-        MIN_ZOOM,
-        MAX_ZOOM
-      )
-      camera.position.setLength(nextDistance)
     }
 
     renderer.domElement.addEventListener('pointerdown', onPointerDown)
     renderer.domElement.addEventListener('pointermove', onPointerMove)
     renderer.domElement.addEventListener('pointerup', onPointerUp)
     renderer.domElement.addEventListener('pointercancel', onPointerUp)
-    renderer.domElement.addEventListener('wheel', onWheel, { passive: false })
     setTimeout(() => {
       dots.forEach((marker, i) => {
         setTimeout(() => {
@@ -737,13 +728,7 @@ export default function Globe({ onDotClick, onDotHover, activeLocationId }: Glob
     function animate() {
       rafRef.current = requestAnimationFrame(animate)
 
-      if (
-        !isDraggingRef.current &&
-        !autoRotatePausedRef.current &&
-        !isAnimatingCameraRef.current
-      ) {
-        globeGroup.rotation.y += AUTO_ROTATE_SPEED
-      }
+      controls.update()
 
       // Rings face camera
       rings.forEach((ring) => {
@@ -875,8 +860,9 @@ export default function Globe({ onDotClick, onDotHover, activeLocationId }: Glob
       renderer.domElement.removeEventListener('pointermove', onPointerMove)
       renderer.domElement.removeEventListener('pointerup', onPointerUp)
       renderer.domElement.removeEventListener('pointercancel', onPointerUp)
-      renderer.domElement.removeEventListener('wheel', onWheel)
       window.removeEventListener('resize', onResize)
+      controls.dispose()
+      controlsRef.current = null
       renderer.dispose()
       globeGeometry.dispose()
       globeMaterial.dispose()
@@ -904,6 +890,9 @@ export default function Globe({ onDotClick, onDotHover, activeLocationId }: Glob
   useEffect(() => {
     if (!activeLocationId && autoRotatePausedRef.current) {
       autoRotatePausedRef.current = false
+      if (controlsRef.current) {
+        controlsRef.current.autoRotate = true
+      }
     }
   }, [activeLocationId])
 
@@ -918,6 +907,8 @@ export default function Globe({ onDotClick, onDotHover, activeLocationId }: Glob
         width: '100%',
         height: '100%',
         zIndex: 1,
+        cursor: 'crosshair',
+        touchAction: 'none',
       }}
     />
   )
