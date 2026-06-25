@@ -115,6 +115,15 @@ function createSilverMaterial(): THREE.MeshPhongMaterial {
   })
 }
 
+function createCopperMaterial(): THREE.MeshPhongMaterial {
+  return new THREE.MeshPhongMaterial({
+    color: 0xb87333,
+    emissive: 0x2a1508,
+    specular: 0xffeedd,
+    shininess: 52,
+  })
+}
+
 function createGoldMaterial(): THREE.MeshPhongMaterial {
   return new THREE.MeshPhongMaterial({
     color: 0xffd700,
@@ -372,6 +381,10 @@ function isGoldLocation(locationId: string): boolean {
   return locationId === 'bellevue' || locationId === 'upenn' || locationId === 'taipei'
 }
 
+function isCopperLocation(locationId: string): boolean {
+  return locationId === 'madrid' || locationId === 'kuala-lumpur'
+}
+
 async function createMarkerForLocation(location: LocationData): Promise<THREE.Object3D> {
   if (location.id === 'bellevue') {
     return createMonopolyHomeMarker(createGoldMaterial())
@@ -384,10 +397,10 @@ async function createMarkerForLocation(location: LocationData): Promise<THREE.Ob
     return createTaipei101Marker(createGoldMaterial())
   }
   if (location.id === 'madrid') {
-    return createMetropolisMarker(createSilverMaterial())
+    return createMetropolisMarker(createCopperMaterial())
   }
   if (location.id === 'kuala-lumpur') {
-    return createKlccTwinTowersMarker(createSilverMaterial())
+    return createKlccTwinTowersMarker(createCopperMaterial())
   }
   return createDotMarker(createSilverMaterial())
 }
@@ -421,11 +434,17 @@ function setMarkerColor(marker: THREE.Object3D, color: number) {
 }
 
 function getMarkerDefaultColor(marker: THREE.Object3D): number {
-  return isGoldLocation((marker.userData.location as LocationData).id) ? 0xffd700 : 0xc0c0c0
+  const locationId = (marker.userData.location as LocationData).id
+  if (isGoldLocation(locationId)) return 0xffd700
+  if (isCopperLocation(locationId)) return 0xb87333
+  return 0xc0c0c0
 }
 
 function getMarkerHoverColor(marker: THREE.Object3D): number {
-  return isGoldLocation((marker.userData.location as LocationData).id) ? 0xfff0a0 : 0xffd700
+  const locationId = (marker.userData.location as LocationData).id
+  if (isGoldLocation(locationId)) return 0xfff0a0
+  if (isCopperLocation(locationId)) return 0xe8a060
+  return 0xffd700
 }
 
 const MARKER_SIZE_MULTIPLIER = 1.3
