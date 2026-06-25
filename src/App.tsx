@@ -3,6 +3,7 @@ import StarfieldBackground from './components/StarfieldBackground'
 import ChromeTitle from './components/ChromeTitle'
 import Globe from './components/Globe'
 import InfoCard from './components/InfoCard'
+import SocialLinks from './components/SocialLinks'
 import { type LocationData } from './data/locations'
 
 function CoordinatesLabel({ location }: { location: LocationData | null }) {
@@ -16,7 +17,6 @@ function CoordinatesLabel({ location }: { location: LocationData | null }) {
       ? `${location.coordinates} · ${location.name.toUpperCase()}`
       : 'EXPLORE THE WORLD'
 
-    // Small delay for flicker effect
     timeoutRef.current = setTimeout(() => {
       setDisplayText(newText)
     }, location ? 30 : 100)
@@ -75,12 +75,14 @@ function HintText({ visible }: { visible: boolean }) {
 }
 
 export default function App() {
-  const [activeLocation, setActiveLocation] = useState<LocationData | null>(null)
+  const [activeLocations, setActiveLocations] = useState<LocationData[]>([])
+  const [activeCardIndex, setActiveCardIndex] = useState(0)
   const [hoveredLocation, setHoveredLocation] = useState<LocationData | null>(null)
   const [hintVisible, setHintVisible] = useState(true)
 
-  const handleDotClick = useCallback((location: LocationData) => {
-    setActiveLocation(location)
+  const handleDotClick = useCallback((locations: LocationData[]) => {
+    setActiveLocations(locations)
+    setActiveCardIndex(0)
     setHintVisible(false)
   }, [])
 
@@ -88,10 +90,15 @@ export default function App() {
     setHoveredLocation(location)
   }, [])
 
-  const handleCloseCard = useCallback(() => {
-    setActiveLocation(null)
+  const handleCloseCards = useCallback(() => {
+    setActiveLocations([])
+    setActiveCardIndex(0)
     setHintVisible(true)
   }, [])
+
+  const currentLocation = activeLocations[activeCardIndex] ?? null
+  const canGoPrev = activeCardIndex > 0
+  const canGoNext = activeCardIndex < activeLocations.length - 1
 
   return (
     <div
@@ -99,29 +106,111 @@ export default function App() {
         width: '100vw',
         height: '100vh',
         overflow: 'hidden',
-        background: '#050505',
+        background: '#000000',
         position: 'relative',
       }}
     >
-      {/* Starfield background layer */}
       <StarfieldBackground />
-
-      {/* Chrome bubble title */}
       <ChromeTitle />
 
-      {/* Three.js Globe layer */}
       <Globe
         onDotClick={handleDotClick}
         onDotHover={handleDotHover}
-        activeLocationId={activeLocation?.id || null}
+        activeLocationId={currentLocation?.id ?? null}
       />
 
-      {/* UI Overlay layer */}
-      <CoordinatesLabel location={hoveredLocation || activeLocation} />
-      <HintText visible={hintVisible && !activeLocation} />
+      <CoordinatesLabel location={hoveredLocation || currentLocation} />
+      <HintText visible={hintVisible && activeLocations.length === 0} />
+      <SocialLinks />
 
-      {/* Info Card */}
-      <InfoCard location={activeLocation} onClose={handleCloseCard} />
+      {currentLocation && (
+        <div
+          style={{
+            position: 'fixed',
+            right: 0,
+            top: '50%',
+            transform: 'translateY(-50%)',
+            zIndex: 20,
+            width: 360,
+          }}
+        >
+          {canGoPrev && (
+            <button
+              type="button"
+              onClick={() => setActiveCardIndex((index) => index - 1)}
+              aria-label="Previous location card"
+              style={{
+                position: 'absolute',
+                left: -44,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                width: 32,
+                height: 32,
+                borderRadius: '50%',
+                border: '1px solid rgba(192, 192, 192, 0.25)',
+                background: 'rgba(0, 0, 0, 0.55)',
+                color: '#C0C0C0',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'background 200ms ease, border-color 200ms ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(192, 192, 192, 0.12)'
+                e.currentTarget.style.borderColor = 'rgba(192, 192, 192, 0.45)'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'rgba(0, 0, 0, 0.55)'
+                e.currentTarget.style.borderColor = 'rgba(192, 192, 192, 0.25)'
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                <path d="M9 2L4 7L9 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+          )}
+
+          <InfoCard key={currentLocation.id} location={currentLocation} onClose={handleCloseCards} embedded />
+
+          {canGoNext && (
+            <button
+              type="button"
+              onClick={() => setActiveCardIndex((index) => index + 1)}
+              aria-label="Next location card"
+              style={{
+                position: 'absolute',
+                left: -44,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                width: 32,
+                height: 32,
+                borderRadius: '50%',
+                border: '1px solid rgba(192, 192, 192, 0.25)',
+                background: 'rgba(0, 0, 0, 0.55)',
+                color: '#C0C0C0',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'background 200ms ease, border-color 200ms ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(192, 192, 192, 0.12)'
+                e.currentTarget.style.borderColor = 'rgba(192, 192, 192, 0.45)'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'rgba(0, 0, 0, 0.55)'
+                e.currentTarget.style.borderColor = 'rgba(192, 192, 192, 0.25)'
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                <path d="M5 2L10 7L5 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+          )}
+        </div>
+      )}
     </div>
   )
 }

@@ -1,11 +1,16 @@
 import { useEffect, useRef, useCallback } from 'react'
 import * as THREE from 'three'
-import { OrbitControls } from 'three-stdlib'
-import { locations, type LocationData } from '../data/locations'
+import { getGlobeLocations, getLocationsForMarker, type LocationData } from '../data/locations'
 import gsap from 'gsap'
 
+const ROTATE_SENSITIVITY = 0.005
+const AUTO_ROTATE_SPEED = 0.0015
+const DRAG_THRESHOLD = 5
+const MIN_ZOOM = 150
+const MAX_ZOOM = 400
+
 interface GlobeProps {
-  onDotClick: (location: LocationData) => void
+  onDotClick: (locations: LocationData[]) => void
   onDotHover: (location: LocationData | null) => void
   activeLocationId: string | null
 }
@@ -19,76 +24,432 @@ function latLngToVector3(lat: number, lng: number, radius: number): THREE.Vector
   return new THREE.Vector3(x, y, z)
 }
 
-function createEarthTexture(): THREE.CanvasTexture {
+function getMarkerCoords(location: LocationData): { lat: number; lng: number } {
+  return { lat: location.lat, lng: location.lng }
+}
+
+function loadImage(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    img.crossOrigin = 'anonymous'
+    img.onload = () => resolve(img)
+    img.onerror = reject
+    img.src = src
+  })
+}
+
+async function createEarthTexture(): Promise<THREE.CanvasTexture> {
+  const width = 2048
+  const height = 1024
   const canvas = document.createElement('canvas')
-  canvas.width = 2048
-  canvas.height = 1024
+  canvas.width = width
+  canvas.height = height
   const ctx = canvas.getContext('2d')!
 
-  // Dark ocean background
-  ctx.fillStyle = '#080808'
-  ctx.fillRect(0, 0, 2048, 1024)
+  const maskImg = await loadImage(
+    'https://threejs.org/examples/textures/planets/earth_specular_2048.jpg'
+  )
 
-  function drawContinent(
-    x: number,
-    y: number,
-    rx: number,
-    ry: number,
-    rotation = 0
-  ) {
-    ctx.save()
-    ctx.translate(x, y)
-    ctx.rotate(rotation)
+  ctx.drawImage(maskImg, 0, 0, width, height)
+  const source = ctx.getImageData(0, 0, width, height)
+  const land = new Uint8Array(width * height)
 
-    const grad = ctx.createRadialGradient(0, -ry * 0.3, 0, 0, 0, Math.max(rx, ry))
-    grad.addColorStop(0, '#D8D8E8')
-    grad.addColorStop(0.35, '#A8A8B8')
-    grad.addColorStop(0.65, '#787888')
-    grad.addColorStop(1, '#505058')
-
-    ctx.fillStyle = grad
-    ctx.beginPath()
-    ctx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2)
-    ctx.fill()
-
-    // Metallic sheen highlight
-    const sheen = ctx.createLinearGradient(-rx, -ry, rx, ry)
-    sheen.addColorStop(0, 'rgba(255, 255, 255, 0.25)')
-    sheen.addColorStop(0.4, 'rgba(255, 255, 255, 0.05)')
-    sheen.addColorStop(0.6, 'rgba(0, 0, 0, 0.1)')
-    sheen.addColorStop(1, 'rgba(200, 200, 220, 0.15)')
-    ctx.fillStyle = sheen
-    ctx.beginPath()
-    ctx.ellipse(0, 0, rx * 0.95, ry * 0.95, 0, 0, Math.PI * 2)
-    ctx.fill()
-
-    ctx.restore()
+  for (let i = 0; i < width * height; i++) {
+    land[i] = source.data[i * 4] > 20 ? 1 : 0
   }
 
-  drawContinent(350, 280, 180, 140, -0.2)
-  drawContinent(420, 380, 100, 80, 0.3)
-  drawContinent(480, 550, 70, 160, 0.1)
-  drawContinent(1000, 250, 100, 70)
-  drawContinent(1050, 420, 90, 140)
-  drawContinent(1350, 280, 220, 130)
-  drawContinent(1550, 600, 80, 50)
-  drawContinent(650, 160, 60, 40)
-
-  // Subtle metallic texture on landmasses
-  for (let i = 0; i < 3000; i++) {
-    const x = Math.random() * 2048
-    const y = Math.random() * 1024
-    const r = Math.random() * 2.5
-    const brightness = 120 + Math.random() * 80
-    ctx.fillStyle = `rgba(${brightness}, ${brightness}, ${brightness + 10}, 0.12)`
-    ctx.beginPath()
-    ctx.arc(x, y, r, 0, Math.PI * 2)
-    ctx.fill()
+  const imageData = ctx.createImageData(width, height)
+  for (let i = 0; i < width * height; i++) {
+    const offset = i * 4
+    if (land[i]) {
+      imageData.data[offset] = 168
+      imageData.data[offset + 1] = 168
+      imageData.data[offset + 2] = 184
+      imageData.data[offset + 3] = 255
+    } else {
+      imageData.data[offset] = 6
+      imageData.data[offset + 1] = 6
+      imageData.data[offset + 2] = 8
+      imageData.data[offset + 3] = 255
+    }
   }
+
+  // Coastline outlines for clearly defined continents
+  for (let y = 1; y < height - 1; y++) {
+    for (let x = 1; x < width - 1; x++) {
+      const i = y * width + x
+      if (!land[i]) continue
+
+      const touchesOcean =
+        !land[i - 1] ||
+        !land[i + 1] ||
+        !land[i - width] ||
+        !land[i + width] ||
+        !land[i - width - 1] ||
+        !land[i - width + 1] ||
+        !land[i + width - 1] ||
+        !land[i + width + 1]
+
+      if (touchesOcean) {
+        const offset = i * 4
+        imageData.data[offset] = 220
+        imageData.data[offset + 1] = 220
+        imageData.data[offset + 2] = 232
+        imageData.data[offset + 3] = 255
+      }
+    }
+  }
+
+  ctx.putImageData(imageData, 0, 0)
 
   const texture = new THREE.CanvasTexture(canvas)
   texture.needsUpdate = true
   return texture
+}
+
+function createSilverMaterial(): THREE.MeshPhongMaterial {
+  return new THREE.MeshPhongMaterial({
+    color: 0xc0c0c0,
+    emissive: 0x222222,
+    specular: 0xffffff,
+    shininess: 55,
+  })
+}
+
+function createGoldMaterial(): THREE.MeshPhongMaterial {
+  return new THREE.MeshPhongMaterial({
+    color: 0xffd700,
+    emissive: 0x3a2a00,
+    specular: 0xffffff,
+    shininess: 50,
+  })
+}
+
+function createMonopolyHomeMarker(material: THREE.MeshPhongMaterial): THREE.Group {
+  const marker = new THREE.Group()
+
+  const bodyWidth = 1.05
+  const bodyDepth = 0.82
+  const bodyHeight = 0.62
+  const roofHeight = 0.48
+  const overhang = 0.1
+  const roofDepth = bodyDepth + overhang * 2
+  const roofHalfWidth = (bodyWidth + overhang * 2) / 2
+  const roofPanelLength = Math.hypot(roofHalfWidth, roofHeight)
+  const roofAngle = Math.atan2(roofHeight, roofHalfWidth)
+  const roofThickness = 0.09
+
+  const body = new THREE.Mesh(
+    new THREE.BoxGeometry(bodyWidth, bodyHeight, bodyDepth),
+    material
+  )
+  body.position.y = bodyHeight / 2
+
+  const leftRoof = new THREE.Mesh(
+    new THREE.BoxGeometry(roofPanelLength, roofThickness, roofDepth),
+    material
+  )
+  leftRoof.position.set(-bodyWidth / 4, bodyHeight + roofHeight / 2, 0)
+  leftRoof.rotation.z = roofAngle
+
+  const rightRoof = new THREE.Mesh(
+    new THREE.BoxGeometry(roofPanelLength, roofThickness, roofDepth),
+    material
+  )
+  rightRoof.position.set(bodyWidth / 4, bodyHeight + roofHeight / 2, 0)
+  rightRoof.rotation.z = -roofAngle
+
+  const chimney = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.06, 0.065, 0.18, 12),
+    material
+  )
+  chimney.position.set(bodyWidth * 0.22, bodyHeight + roofHeight * 0.58, bodyDepth * 0.12)
+  chimney.rotation.z = -roofAngle
+
+  marker.add(body, leftRoof, rightRoof, chimney)
+
+  return marker
+}
+
+function createDotMarker(material: THREE.MeshPhongMaterial): THREE.Mesh {
+  return new THREE.Mesh(new THREE.SphereGeometry(1.2, 16, 16), material)
+}
+
+async function createGoldCrestTexture(src: string): Promise<THREE.CanvasTexture> {
+  const img = await loadImage(src)
+  const canvas = document.createElement('canvas')
+  canvas.width = img.width
+  canvas.height = img.height
+  const ctx = canvas.getContext('2d')!
+  ctx.drawImage(img, 0, 0)
+
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+  for (let i = 0; i < imageData.data.length; i += 4) {
+    const red = imageData.data[i]
+    const green = imageData.data[i + 1]
+    const blue = imageData.data[i + 2]
+    const alpha = imageData.data[i + 3]
+    if (alpha < 20) continue
+
+    const luminance = (0.299 * red + 0.587 * green + 0.114 * blue) / 255
+    if (luminance < 0.06) {
+      imageData.data[i + 3] = 0
+      continue
+    }
+
+    imageData.data[i] = Math.min(255, 90 + luminance * 165)
+    imageData.data[i + 1] = Math.min(255, 70 + luminance * 145)
+    imageData.data[i + 2] = Math.min(255, 10 + luminance * 55)
+  }
+
+  ctx.putImageData(imageData, 0, 0)
+  const texture = new THREE.CanvasTexture(canvas)
+  texture.needsUpdate = true
+  return texture
+}
+
+function createUpennCrestMarker(texture: THREE.Texture): THREE.Group {
+  const marker = new THREE.Group()
+  const crestWidth = 1.35
+  const crestHeight = 1.55
+
+  const backing = new THREE.Mesh(
+    new THREE.BoxGeometry(crestWidth * 0.88, 0.1, crestHeight * 0.88),
+    createGoldMaterial()
+  )
+  backing.position.y = 0.05
+
+  const crest = new THREE.Mesh(
+    new THREE.PlaneGeometry(crestWidth, crestHeight),
+    new THREE.MeshBasicMaterial({
+      map: texture,
+      transparent: true,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+    })
+  )
+  crest.rotation.x = -Math.PI / 2
+  crest.position.y = 0.12
+
+  marker.add(backing, crest)
+  return marker
+}
+
+function createMetropolisMarker(material: THREE.MeshPhongMaterial): THREE.Group {
+  const marker = new THREE.Group()
+
+  const base = new THREE.Mesh(new THREE.BoxGeometry(1.05, 0.11, 0.52), material)
+  base.position.y = 0.055
+  marker.add(base)
+
+  const body = new THREE.Mesh(new THREE.BoxGeometry(0.88, 0.92, 0.46), material)
+  body.position.y = 0.11 + 0.46
+  marker.add(body)
+
+  const cornice = new THREE.Mesh(new THREE.BoxGeometry(0.96, 0.08, 0.5), material)
+  cornice.position.y = 0.11 + 0.92 + 0.04
+  marker.add(cornice)
+
+  const upperTier = new THREE.Mesh(new THREE.BoxGeometry(0.74, 0.28, 0.4), material)
+  upperTier.position.y = 0.11 + 0.92 + 0.08 + 0.14
+  marker.add(upperTier)
+
+  const dome = new THREE.Mesh(
+    new THREE.SphereGeometry(0.26, 16, 12, 0, Math.PI * 2, 0, Math.PI * 0.52),
+    material
+  )
+  dome.position.y = 0.11 + 0.92 + 0.08 + 0.28 + 0.12
+  marker.add(dome)
+
+  const angelTorso = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.045, 0.11, 8), material)
+  angelTorso.position.y = dome.position.y + 0.22
+  marker.add(angelTorso)
+
+  const wings = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.018, 0.07), material)
+  wings.position.copy(angelTorso.position)
+  marker.add(wings)
+
+  const raisedArm = new THREE.Mesh(new THREE.BoxGeometry(0.018, 0.09, 0.018), material)
+  raisedArm.position.set(0.035, angelTorso.position.y + 0.07, 0)
+  marker.add(raisedArm)
+
+  return marker
+}
+
+function createKlccTwinTowersMarker(material: THREE.MeshPhongMaterial): THREE.Group {
+  const marker = new THREE.Group()
+
+  const base = new THREE.Mesh(new THREE.BoxGeometry(1.05, 0.1, 0.48), material)
+  base.position.y = 0.05
+  marker.add(base)
+
+  const towerOffset = 0.22
+  const towerTiers = [
+    { y: 0.36, height: 0.34, radiusTop: 0.11, radiusBottom: 0.15 },
+    { y: 0.66, height: 0.3, radiusTop: 0.09, radiusBottom: 0.11 },
+    { y: 0.92, height: 0.28, radiusTop: 0.07, radiusBottom: 0.09 },
+    { y: 1.16, height: 0.24, radiusTop: 0.05, radiusBottom: 0.07 },
+    { y: 1.36, height: 0.2, radiusTop: 0.035, radiusBottom: 0.05 },
+  ]
+
+  ;[-towerOffset, towerOffset].forEach((x) => {
+    towerTiers.forEach(({ y, height, radiusTop, radiusBottom }) => {
+      const segment = new THREE.Mesh(
+        new THREE.CylinderGeometry(radiusTop, radiusBottom, height, 8),
+        material
+      )
+      segment.position.set(x, 0.1 + y, 0)
+      marker.add(segment)
+    })
+
+    const spire = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.04, 0.38, 8), material)
+    spire.position.set(x, 0.1 + 1.36 + 0.1 + 0.19, 0)
+    marker.add(spire)
+
+    const spireTip = new THREE.Mesh(new THREE.ConeGeometry(0.035, 0.12, 8), material)
+    spireTip.position.set(x, spire.position.y + 0.24, 0)
+    marker.add(spireTip)
+  })
+
+  const skybridge = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.06, 0.12), material)
+  skybridge.position.y = 0.1 + 0.58
+  marker.add(skybridge)
+
+  return marker
+}
+
+function createTaipei101Marker(material: THREE.MeshPhongMaterial): THREE.Group {
+  const marker = new THREE.Group()
+
+  const base = new THREE.Mesh(
+    new THREE.BoxGeometry(0.95, 0.14, 0.95),
+    material
+  )
+  base.position.y = 0.07
+  marker.add(base)
+
+  const tiers = [
+    { y: 0.38, height: 0.48, radiusTop: 0.4, radiusBottom: 0.46 },
+    { y: 0.82, height: 0.42, radiusTop: 0.34, radiusBottom: 0.4 },
+    { y: 1.2, height: 0.38, radiusTop: 0.28, radiusBottom: 0.34 },
+    { y: 1.52, height: 0.34, radiusTop: 0.22, radiusBottom: 0.28 },
+    { y: 1.8, height: 0.3, radiusTop: 0.16, radiusBottom: 0.22 },
+  ]
+
+  tiers.forEach(({ y, height, radiusTop, radiusBottom }) => {
+    const segment = new THREE.Mesh(
+      new THREE.CylinderGeometry(radiusTop, radiusBottom, height, 8),
+      material
+    )
+    segment.position.y = y
+    marker.add(segment)
+
+    const flare = new THREE.Mesh(
+      new THREE.CylinderGeometry(radiusBottom * 1.04, radiusBottom * 1.1, 0.07, 8),
+      material
+    )
+    flare.position.y = y - height / 2 + 0.035
+    marker.add(flare)
+  })
+
+  const spire = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.035, 0.07, 0.62, 8),
+    material
+  )
+  spire.position.y = 2.18
+  marker.add(spire)
+
+  const spireTip = new THREE.Mesh(
+    new THREE.ConeGeometry(0.055, 0.22, 8),
+    material
+  )
+  spireTip.position.y = 2.58
+  marker.add(spireTip)
+
+  return marker
+}
+
+function isGoldLocation(locationId: string): boolean {
+  return locationId === 'bellevue' || locationId === 'upenn' || locationId === 'taipei'
+}
+
+async function createMarkerForLocation(location: LocationData): Promise<THREE.Object3D> {
+  if (location.id === 'bellevue') {
+    return createMonopolyHomeMarker(createGoldMaterial())
+  }
+  if (location.id === 'upenn') {
+    const texture = await createGoldCrestTexture('/upenn-crest.png')
+    return createUpennCrestMarker(texture)
+  }
+  if (location.id === 'taipei') {
+    return createTaipei101Marker(createGoldMaterial())
+  }
+  if (location.id === 'madrid') {
+    return createMetropolisMarker(createSilverMaterial())
+  }
+  if (location.id === 'kuala-lumpur') {
+    return createKlccTwinTowersMarker(createSilverMaterial())
+  }
+  return createDotMarker(createSilverMaterial())
+}
+
+function orientMarkerToGlobe(marker: THREE.Object3D, position: THREE.Vector3) {
+  marker.position.copy(position)
+  marker.quaternion.setFromUnitVectors(
+    new THREE.Vector3(0, 1, 0),
+    position.clone().normalize()
+  )
+}
+
+function getMarkerFromIntersection(object: THREE.Object3D): THREE.Object3D | null {
+  let current: THREE.Object3D | null = object
+  while (current) {
+    if (current.userData.location) return current
+    current = current.parent
+  }
+  return null
+}
+
+function setMarkerColor(marker: THREE.Object3D, color: number) {
+  marker.traverse((child) => {
+    if (child instanceof THREE.Mesh) {
+      const { material } = child
+      if (material instanceof THREE.MeshPhongMaterial || material instanceof THREE.MeshBasicMaterial) {
+        material.color.setHex(color)
+      }
+    }
+  })
+}
+
+function getMarkerDefaultColor(marker: THREE.Object3D): number {
+  return isGoldLocation((marker.userData.location as LocationData).id) ? 0xffd700 : 0xc0c0c0
+}
+
+function getMarkerHoverColor(marker: THREE.Object3D): number {
+  return isGoldLocation((marker.userData.location as LocationData).id) ? 0xfff0a0 : 0xffd700
+}
+
+const MARKER_SIZE_MULTIPLIER = 1.3
+const DOT_MARKER_SIZE_MULTIPLIER = 0.8
+
+const CUSTOM_MARKER_IDS = new Set(['bellevue', 'upenn', 'taipei', 'madrid', 'kuala-lumpur'])
+
+function usesDotMarker(locationId: string): boolean {
+  return !CUSTOM_MARKER_IDS.has(locationId)
+}
+
+function getMarkerBaseScale(marker: THREE.Object3D): number {
+  const locationId = (marker.userData.location as LocationData).id
+  let scale = 1
+  if (locationId === 'taipei' || locationId === 'madrid') scale = 1.05
+  else if (locationId === 'kuala-lumpur') scale = 1.05 * 1.2
+  else if (isGoldLocation(locationId)) scale = 1.15
+  if (usesDotMarker(locationId)) scale *= DOT_MARKER_SIZE_MULTIPLIER
+  return scale * MARKER_SIZE_MULTIPLIER
+}
+
+function getMarkerHoverScale(marker: THREE.Object3D): number {
+  return getMarkerBaseScale(marker) * 1.4
 }
 
 export default function Globe({ onDotClick, onDotHover, activeLocationId }: GlobeProps) {
@@ -96,8 +457,7 @@ export default function Globe({ onDotClick, onDotHover, activeLocationId }: Glob
   const sceneRef = useRef<THREE.Scene | null>(null)
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null)
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null)
-  const controlsRef = useRef<OrbitControls | null>(null)
-  const dotsRef = useRef<THREE.Mesh[]>([])
+  const dotsRef = useRef<THREE.Object3D[]>([])
   const ringsRef = useRef<THREE.Mesh[]>([])
   const outerRingsRef = useRef<(THREE.Mesh | null)[]>([])
   const raycasterRef = useRef(new THREE.Raycaster())
@@ -106,63 +466,81 @@ export default function Globe({ onDotClick, onDotHover, activeLocationId }: Glob
   const rafRef = useRef<number>(0)
   const isAnimatingCameraRef = useRef(false)
   const autoRotatePausedRef = useRef(false)
+  const isDraggingRef = useRef(false)
+  const hasDraggedRef = useRef(false)
+  const dragStartRef = useRef({ x: 0, y: 0 })
+  const lastPointerRef = useRef({ x: 0, y: 0 })
 
-  const handleDotClick = useCallback((location: LocationData) => {
-    onDotClick(location)
+  const handleDotClick = useCallback((clickedLocations: LocationData[]) => {
+    onDotClick(clickedLocations)
   }, [onDotClick])
 
   useEffect(() => {
     const container = containerRef.current
     if (!container) return
 
-    // Scene
-    const scene = new THREE.Scene()
-    sceneRef.current = scene
+    let disposed = false
 
-    // Camera
-    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000)
-    camera.position.set(0, 0, 240)
-    cameraRef.current = camera
+    const init = async () => {
+      // Scene
+      const scene = new THREE.Scene()
+      sceneRef.current = scene
 
-    // Renderer
-    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true })
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
-    renderer.setSize(window.innerWidth, window.innerHeight)
-    renderer.domElement.style.width = '100%'
-    renderer.domElement.style.height = '100%'
-    renderer.domElement.style.display = 'block'
-    container.appendChild(renderer.domElement)
-    rendererRef.current = renderer
+      // Camera
+      const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000)
+      camera.position.set(0, 0, 240)
+      cameraRef.current = camera
 
-    // Lighting
-    const ambientLight = new THREE.AmbientLight(0x404040, 0.6)
-    scene.add(ambientLight)
+      // Renderer
+      const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true })
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+      renderer.setSize(window.innerWidth, window.innerHeight)
+      renderer.domElement.style.width = '100%'
+      renderer.domElement.style.height = '100%'
+      renderer.domElement.style.display = 'block'
+      container.appendChild(renderer.domElement)
+      rendererRef.current = renderer
 
-    const dirLight1 = new THREE.DirectionalLight(0xffffff, 0.8)
-    dirLight1.position.set(100, 50, 50)
-    scene.add(dirLight1)
+      // Lighting
+      const ambientLight = new THREE.AmbientLight(0x404040, 0.6)
+      scene.add(ambientLight)
 
-    const dirLight2 = new THREE.DirectionalLight(0x888888, 0.3)
-    dirLight2.position.set(-50, -30, -50)
-    scene.add(dirLight2)
+      const dirLight1 = new THREE.DirectionalLight(0xffffff, 0.8)
+      dirLight1.position.set(100, 50, 50)
+      scene.add(dirLight1)
 
-    // Globe group
-    const globeGroup = new THREE.Group()
-    scene.add(globeGroup)
+      const dirLight2 = new THREE.DirectionalLight(0x888888, 0.3)
+      dirLight2.position.set(-50, -30, -50)
+      scene.add(dirLight2)
 
-    // Globe sphere
-    const earthTexture = createEarthTexture()
-    const globeGeometry = new THREE.SphereGeometry(80, 64, 64)
-    const globeMaterial = new THREE.MeshPhongMaterial({
-      map: earthTexture,
-      color: 0x888898,
-      emissive: 0x101018,
-      specular: 0xccccdd,
-      shininess: 35,
-      transparent: true,
-    })
-    const globe = new THREE.Mesh(globeGeometry, globeMaterial)
-    globeGroup.add(globe)
+      // Globe group
+      const globeGroup = new THREE.Group()
+      scene.add(globeGroup)
+
+      const globeGeometry = new THREE.SphereGeometry(80, 64, 64)
+      const globeMaterial = new THREE.MeshPhongMaterial({
+        color: 0xffffff,
+        emissive: 0x080810,
+        specular: 0x999999,
+        shininess: 20,
+      })
+
+      const globe = new THREE.Mesh(globeGeometry, globeMaterial)
+      globeGroup.add(globe)
+
+      try {
+        const earthTexture = await createEarthTexture()
+        if (disposed) {
+          earthTexture.dispose()
+          return
+        }
+        globeMaterial.map = earthTexture
+        globeMaterial.needsUpdate = true
+      } catch (error) {
+        console.error('Failed to load earth texture:', error)
+      }
+
+      if (disposed) return
 
     // Atmosphere glow
     const atmosphereGeo = new THREE.SphereGeometry(85, 64, 64)
@@ -189,28 +567,24 @@ export default function Globe({ onDotClick, onDotHover, activeLocationId }: Glob
     const atmosphere = new THREE.Mesh(atmosphereGeo, atmosphereMat)
     globeGroup.add(atmosphere)
 
-    // Dot markers
-    const dots: THREE.Mesh[] = []
+    // Location markers
+    const dots: THREE.Object3D[] = []
     const rings: THREE.Mesh[] = []
     const outerRings: (THREE.Mesh | null)[] = []
 
-    locations.forEach((location, index) => {
-      const pos = latLngToVector3(location.lat, location.lng, 82)
+    for (let index = 0; index < getGlobeLocations().length; index++) {
+      const location = getGlobeLocations()[index]
+      const { lat, lng } = getMarkerCoords(location)
+      const pos = latLngToVector3(lat, lng, 82)
+      const marker = await createMarkerForLocation(location)
 
-      // Dot sphere
-      const dotGeo = new THREE.SphereGeometry(1.2, 16, 16)
-      const dotMat = new THREE.MeshPhongMaterial({
-        color: 0xC0C0C0,
-        emissive: 0x222222,
-        specular: 0xffffff,
-        shininess: 50,
-      })
-      const dot = new THREE.Mesh(dotGeo, dotMat)
-      dot.position.copy(pos)
-      dot.scale.set(0, 0, 0) // Start invisible for entrance animation
-      dot.userData = { location, index }
-      globeGroup.add(dot)
-      dots.push(dot)
+      if (disposed) return
+
+      orientMarkerToGlobe(marker, pos)
+      marker.scale.set(0, 0, 0)
+      marker.userData = { location, index }
+      globeGroup.add(marker)
+      dots.push(marker)
 
       // Facing ring
       const ringGeo = new THREE.RingGeometry(2.0, 2.4, 32)
@@ -227,32 +601,117 @@ export default function Globe({ onDotClick, onDotHover, activeLocationId }: Glob
       rings.push(ring)
 
       outerRings.push(null)
-    })
+    }
 
     dotsRef.current = dots
     ringsRef.current = rings
     outerRingsRef.current = outerRings
 
-    // Controls
-    const controls = new OrbitControls(camera, renderer.domElement)
-    controls.enableDamping = true
-    controls.dampingFactor = 0.05
-    controls.enablePan = false
-    controls.minDistance = 150
-    controls.maxDistance = 400
-    controls.rotateSpeed = 0.4
-    controls.autoRotate = true
-    controls.autoRotateSpeed = 0.3
-    controlsRef.current = controls
+    const trySelectDot = (clientX: number, clientY: number) => {
+      mouseRef.current.x = (clientX / window.innerWidth) * 2 - 1
+      mouseRef.current.y = -(clientY / window.innerHeight) * 2 + 1
 
-    // Dot entrance animation
+      raycasterRef.current.setFromCamera(mouseRef.current, camera)
+      const intersects = raycasterRef.current.intersectObjects(dots, true)
+
+      if (intersects.length > 0) {
+        const clickedMarker = getMarkerFromIntersection(intersects[0].object)
+        if (!clickedMarker) return
+
+        const location = clickedMarker.userData.location as LocationData
+        const { lat, lng } = getMarkerCoords(location)
+
+        autoRotatePausedRef.current = true
+        isAnimatingCameraRef.current = true
+
+        const targetPos = latLngToVector3(lat, lng, 180)
+
+        gsap.to(camera.position, {
+          x: targetPos.x,
+          y: targetPos.y,
+          z: targetPos.z,
+          duration: 1.2,
+          ease: 'power3.out',
+          onUpdate: () => {
+            camera.lookAt(0, 0, 0)
+          },
+          onComplete: () => {
+            isAnimatingCameraRef.current = false
+          },
+        })
+
+        handleDotClick(getLocationsForMarker(location.id))
+      }
+    }
+
+    const onPointerDown = (event: PointerEvent) => {
+      if (isAnimatingCameraRef.current) return
+
+      isDraggingRef.current = true
+      hasDraggedRef.current = false
+      dragStartRef.current = { x: event.clientX, y: event.clientY }
+      lastPointerRef.current = { x: event.clientX, y: event.clientY }
+      renderer.domElement.setPointerCapture(event.pointerId)
+    }
+
+    const onPointerMove = (event: PointerEvent) => {
+      mouseRef.current.x = (event.clientX / window.innerWidth) * 2 - 1
+      mouseRef.current.y = -(event.clientY / window.innerHeight) * 2 + 1
+
+      if (!isDraggingRef.current || isAnimatingCameraRef.current) return
+
+      const deltaX = event.clientX - lastPointerRef.current.x
+      const deltaY = event.clientY - lastPointerRef.current.y
+
+      globeGroup.rotation.y += deltaX * ROTATE_SENSITIVITY
+      globeGroup.rotation.x += deltaY * ROTATE_SENSITIVITY
+
+      lastPointerRef.current = { x: event.clientX, y: event.clientY }
+
+      const totalDrag = Math.hypot(
+        event.clientX - dragStartRef.current.x,
+        event.clientY - dragStartRef.current.y
+      )
+      if (totalDrag > DRAG_THRESHOLD) {
+        hasDraggedRef.current = true
+      }
+    }
+
+    const onPointerUp = (event: PointerEvent) => {
+      if (isDraggingRef.current && !hasDraggedRef.current && !isAnimatingCameraRef.current) {
+        trySelectDot(event.clientX, event.clientY)
+      }
+
+      isDraggingRef.current = false
+      if (renderer.domElement.hasPointerCapture(event.pointerId)) {
+        renderer.domElement.releasePointerCapture(event.pointerId)
+      }
+    }
+
+    const onWheel = (event: WheelEvent) => {
+      event.preventDefault()
+      const distance = camera.position.length()
+      const nextDistance = THREE.MathUtils.clamp(
+        distance + event.deltaY * 0.05,
+        MIN_ZOOM,
+        MAX_ZOOM
+      )
+      camera.position.setLength(nextDistance)
+    }
+
+    renderer.domElement.addEventListener('pointerdown', onPointerDown)
+    renderer.domElement.addEventListener('pointermove', onPointerMove)
+    renderer.domElement.addEventListener('pointerup', onPointerUp)
+    renderer.domElement.addEventListener('pointercancel', onPointerUp)
+    renderer.domElement.addEventListener('wheel', onWheel, { passive: false })
     setTimeout(() => {
-      dots.forEach((dot, i) => {
+      dots.forEach((marker, i) => {
         setTimeout(() => {
-          gsap.to(dot.scale, {
-            x: 1,
-            y: 1,
-            z: 1,
+          const targetScale = getMarkerBaseScale(marker)
+          gsap.to(marker.scale, {
+            x: targetScale,
+            y: targetScale,
+            z: targetScale,
             duration: 0.4,
             ease: 'back.out(2)',
           })
@@ -267,57 +726,6 @@ export default function Globe({ onDotClick, onDotHover, activeLocationId }: Glob
       })
     }, 800)
 
-    // Mouse move handler
-    const onMouseMove = (event: MouseEvent) => {
-      mouseRef.current.x = (event.clientX / window.innerWidth) * 2 - 1
-      mouseRef.current.y = -(event.clientY / window.innerHeight) * 2 + 1
-    }
-
-    // Click handler
-    const onClick = (event: MouseEvent) => {
-      if (isAnimatingCameraRef.current) return
-
-      mouseRef.current.x = (event.clientX / window.innerWidth) * 2 - 1
-      mouseRef.current.y = -(event.clientY / window.innerHeight) * 2 + 1
-
-      raycasterRef.current.setFromCamera(mouseRef.current, camera)
-      const intersects = raycasterRef.current.intersectObjects(dots)
-
-      if (intersects.length > 0) {
-        const clickedDot = intersects[0].object as THREE.Mesh
-        const location = clickedDot.userData.location as LocationData
-
-        // Pause auto-rotate
-        autoRotatePausedRef.current = true
-        controls.autoRotate = false
-        isAnimatingCameraRef.current = true
-
-        // Camera animation to dot
-        const targetPos = latLngToVector3(location.lat, location.lng, 180)
-
-        gsap.to(camera.position, {
-          x: targetPos.x,
-          y: targetPos.y,
-          z: targetPos.z,
-          duration: 1.2,
-          ease: 'power3.out',
-          onUpdate: () => {
-            camera.lookAt(0, 0, 0)
-          },
-          onComplete: () => {
-            isAnimatingCameraRef.current = false
-            controls.enabled = true
-          },
-        })
-
-        controls.enabled = false
-        handleDotClick(location)
-      }
-    }
-
-    window.addEventListener('mousemove', onMouseMove)
-    window.addEventListener('click', onClick)
-
     // Resize handler
     const onResize = () => {
       camera.aspect = window.innerWidth / window.innerHeight
@@ -329,7 +737,13 @@ export default function Globe({ onDotClick, onDotHover, activeLocationId }: Glob
     function animate() {
       rafRef.current = requestAnimationFrame(animate)
 
-      controls.update()
+      if (
+        !isDraggingRef.current &&
+        !autoRotatePausedRef.current &&
+        !isAnimatingCameraRef.current
+      ) {
+        globeGroup.rotation.y += AUTO_ROTATE_SPEED
+      }
 
       // Rings face camera
       rings.forEach((ring) => {
@@ -341,22 +755,30 @@ export default function Globe({ onDotClick, onDotHover, activeLocationId }: Glob
 
       // Raycasting for hover
       raycasterRef.current.setFromCamera(mouseRef.current, camera)
-      const intersects = raycasterRef.current.intersectObjects(dots)
+      const intersects = raycasterRef.current.intersectObjects(dots, true)
 
       if (intersects.length > 0) {
-        const hoveredDot = intersects[0].object as THREE.Mesh
-        const index = hoveredDot.userData.index as number
+        const hoveredMarker = getMarkerFromIntersection(intersects[0].object)
+        if (!hoveredMarker) return
+
+        const index = hoveredMarker.userData.index as number
 
         if (hoveredDotRef.current !== index) {
           // Reset previous hover
           if (hoveredDotRef.current !== null) {
             const prevIndex = hoveredDotRef.current
-            const prevDot = dots[prevIndex]
+            const prevMarker = dots[prevIndex]
             const prevRing = rings[prevIndex]
             const prevOuterRing = outerRings[prevIndex]
+            const prevScale = getMarkerBaseScale(prevMarker)
 
-            gsap.to(prevDot.scale, { x: 1, y: 1, z: 1, duration: 0.2 })
-            ;(prevDot.material as THREE.MeshPhongMaterial).color.setHex(0xC0C0C0)
+            gsap.to(prevMarker.scale, {
+              x: prevScale,
+              y: prevScale,
+              z: prevScale,
+              duration: 0.2,
+            })
+            setMarkerColor(prevMarker, getMarkerDefaultColor(prevMarker))
             gsap.to(prevRing.scale, { x: 1, y: 1, z: 1, duration: 0.2 })
             ;(prevRing.material as THREE.MeshBasicMaterial).opacity = 0.4
             ;(prevRing.material as THREE.MeshBasicMaterial).color.setHex(0xC0C0C0)
@@ -374,11 +796,17 @@ export default function Globe({ onDotClick, onDotHover, activeLocationId }: Glob
 
           // Apply new hover
           hoveredDotRef.current = index
-          const dot = dots[index]
+          const marker = dots[index]
           const ring = rings[index]
+          const hoverScale = getMarkerHoverScale(marker)
 
-          gsap.to(dot.scale, { x: 1.4, y: 1.4, z: 1.4, duration: 0.2 })
-          ;(dot.material as THREE.MeshPhongMaterial).color.setHex(0xFFD700)
+          gsap.to(marker.scale, {
+            x: hoverScale,
+            y: hoverScale,
+            z: hoverScale,
+            duration: 0.2,
+          })
+          setMarkerColor(marker, getMarkerHoverColor(marker))
           gsap.to(ring.scale, { x: 1.6, y: 1.6, z: 1.6, duration: 0.2 })
           ;(ring.material as THREE.MeshBasicMaterial).opacity = 0.8
           ;(ring.material as THREE.MeshBasicMaterial).color.setHex(0xFFD700)
@@ -392,24 +820,30 @@ export default function Globe({ onDotClick, onDotHover, activeLocationId }: Glob
             side: THREE.DoubleSide,
           })
           const outerRing = new THREE.Mesh(outerRingGeo, outerRingMat)
-          outerRing.position.copy(dot.position)
+          outerRing.position.copy(marker.position)
           outerRing.scale.set(0, 0, 0)
           globeGroup.add(outerRing)
           outerRings[index] = outerRing
 
           gsap.to(outerRing.scale, { x: 1, y: 1, z: 1, duration: 0.3 })
 
-          onDotHover(hoveredDot.userData.location as LocationData)
+          onDotHover(hoveredMarker.userData.location as LocationData)
         }
       } else {
         if (hoveredDotRef.current !== null) {
           const prevIndex = hoveredDotRef.current
-          const prevDot = dots[prevIndex]
+          const prevMarker = dots[prevIndex]
           const prevRing = rings[prevIndex]
           const prevOuterRing = outerRings[prevIndex]
+          const prevScale = getMarkerBaseScale(prevMarker)
 
-          gsap.to(prevDot.scale, { x: 1, y: 1, z: 1, duration: 0.2 })
-          ;(prevDot.material as THREE.MeshPhongMaterial).color.setHex(0xC0C0C0)
+          gsap.to(prevMarker.scale, {
+            x: prevScale,
+            y: prevScale,
+            z: prevScale,
+            duration: 0.2,
+          })
+          setMarkerColor(prevMarker, getMarkerDefaultColor(prevMarker))
           gsap.to(prevRing.scale, { x: 1, y: 1, z: 1, duration: 0.2 })
           ;(prevRing.material as THREE.MeshBasicMaterial).opacity = 0.4
           ;(prevRing.material as THREE.MeshBasicMaterial).color.setHex(0xC0C0C0)
@@ -435,31 +869,41 @@ export default function Globe({ onDotClick, onDotHover, activeLocationId }: Glob
     animate()
 
     return () => {
+      disposed = true
       cancelAnimationFrame(rafRef.current)
-      window.removeEventListener('mousemove', onMouseMove)
-      window.removeEventListener('click', onClick)
+      renderer.domElement.removeEventListener('pointerdown', onPointerDown)
+      renderer.domElement.removeEventListener('pointermove', onPointerMove)
+      renderer.domElement.removeEventListener('pointerup', onPointerUp)
+      renderer.domElement.removeEventListener('pointercancel', onPointerUp)
+      renderer.domElement.removeEventListener('wheel', onWheel)
       window.removeEventListener('resize', onResize)
-      controls.dispose()
       renderer.dispose()
       globeGeometry.dispose()
       globeMaterial.dispose()
+      if (globeMaterial.map) globeMaterial.map.dispose()
       atmosphereGeo.dispose()
       atmosphereMat.dispose()
       if (container.contains(renderer.domElement)) {
         container.removeChild(renderer.domElement)
       }
     }
+    }
+
+    let cleanup: (() => void) | undefined
+    void init().then((fn) => {
+      cleanup = fn
+    })
+
+    return () => {
+      disposed = true
+      cleanup?.()
+    }
   }, [handleDotClick, onDotHover])
 
   // Resume auto-rotate when card closes
   useEffect(() => {
-    if (!activeLocationId && controlsRef.current && autoRotatePausedRef.current) {
+    if (!activeLocationId && autoRotatePausedRef.current) {
       autoRotatePausedRef.current = false
-      setTimeout(() => {
-        if (controlsRef.current) {
-          controlsRef.current.autoRotate = true
-        }
-      }, 2000)
     }
   }, [activeLocationId])
 

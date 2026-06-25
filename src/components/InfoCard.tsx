@@ -4,9 +4,130 @@ import { type LocationData } from '../data/locations'
 interface InfoCardProps {
   location: LocationData | null
   onClose: () => void
+  embedded?: boolean
 }
 
-export default function InfoCard({ location, onClose }: InfoCardProps) {
+function getTitleFontSize(name: string, maxWidth = 268): number {
+  const maxSize = 26
+  const minSize = 15
+  const charWidthFactor = 0.58
+
+  for (let size = maxSize; size >= minSize; size--) {
+    if (name.length * size * charWidthFactor <= maxWidth) {
+      return size
+    }
+  }
+
+  return minSize
+}
+
+const PHOTO_REEL_INTERVAL_MS = 3500
+const PHOTO_CROSSFADE_MS = 800
+
+function PhotoReel({
+  photos,
+  photoPositions,
+  alt,
+  isActive,
+}: {
+  photos: string[]
+  photoPositions?: string[]
+  alt: string
+  isActive: boolean
+}) {
+  const [activeIndex, setActiveIndex] = useState(0)
+  const [prevIndex, setPrevIndex] = useState<number | null>(null)
+  const [isCrossfading, setIsCrossfading] = useState(false)
+
+  useEffect(() => {
+    setActiveIndex(0)
+    setPrevIndex(null)
+    setIsCrossfading(false)
+  }, [photos])
+
+  useEffect(() => {
+    if (photos.length <= 1 || !isActive) return
+
+    const interval = setInterval(() => {
+      setActiveIndex((current) => {
+        setPrevIndex(current)
+        setIsCrossfading(true)
+        return (current + 1) % photos.length
+      })
+    }, PHOTO_REEL_INTERVAL_MS)
+
+    return () => clearInterval(interval)
+  }, [photos, isActive])
+
+  useEffect(() => {
+    if (!isCrossfading) return
+
+    const timer = setTimeout(() => {
+      setPrevIndex(null)
+      setIsCrossfading(false)
+    }, PHOTO_CROSSFADE_MS)
+
+    return () => clearTimeout(timer)
+  }, [isCrossfading, activeIndex])
+
+  return (
+    <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+      {photos.map((src, index) => {
+        const isCurrent = index === activeIndex
+        const isPrevious = index === prevIndex && isCrossfading
+        const isVisible = isCurrent || isPrevious
+
+        return (
+          <img
+            key={src}
+            src={src}
+            alt={alt}
+            style={{
+              position: 'absolute',
+              inset: 0,
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              objectPosition: photoPositions?.[index] ?? 'center center',
+              opacity: isVisible ? (isCurrent ? 1 : 0) : 0,
+              transition: `opacity ${PHOTO_CROSSFADE_MS}ms ease`,
+              zIndex: isCurrent ? 2 : 1,
+            }}
+          />
+        )
+      })}
+
+      {photos.length > 1 && (
+        <div
+          style={{
+            position: 'absolute',
+            bottom: 10,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            display: 'flex',
+            gap: 6,
+            zIndex: 3,
+          }}
+        >
+          {photos.map((src, index) => (
+            <span
+              key={src}
+              style={{
+                width: 5,
+                height: 5,
+                borderRadius: '50%',
+                background: index === activeIndex ? 'rgba(255, 255, 255, 0.9)' : 'rgba(255, 255, 255, 0.35)',
+                transition: 'background 300ms ease',
+              }}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+export default function InfoCard({ location, onClose, embedded = false }: InfoCardProps) {
   const [isActive, setIsActive] = useState(false)
   const [displayLocation, setDisplayLocation] = useState<LocationData | null>(null)
   const prevLocationRef = useRef<LocationData | null>(null)
@@ -45,6 +166,8 @@ export default function InfoCard({ location, onClose }: InfoCardProps) {
 
   if (!showLocation) return null
 
+  const titleFontSize = getTitleFontSize(showLocation.name)
+
   // Split title into characters for animation
   const titleChars = showLocation.name.split('').map((char, i) => (
     <span
@@ -64,12 +187,18 @@ export default function InfoCard({ location, onClose }: InfoCardProps) {
     <div
       className="info-card"
       style={{
-        position: 'fixed',
-        right: 0,
-        top: '50%',
-        transform: `translateY(-50%) ${isActive ? 'translateX(0)' : 'translateX(100%)'}`,
+        position: embedded ? 'relative' : 'fixed',
+        right: embedded ? undefined : 0,
+        top: embedded ? undefined : '50%',
+        transform: embedded
+          ? isActive
+            ? 'translateX(0)'
+            : 'translateX(100%)'
+          : `translateY(-50%) ${isActive ? 'translateX(0)' : 'translateX(100%)'}`,
         width: '360px',
-        maxHeight: '520px',
+        maxHeight: '580px',
+        display: 'flex',
+        flexDirection: 'column',
         background: 'rgba(10, 10, 10, 0.92)',
         backdropFilter: 'blur(16px)',
         WebkitBackdropFilter: 'blur(16px)',
@@ -121,39 +250,76 @@ export default function InfoCard({ location, onClose }: InfoCardProps) {
         style={{
           width: '100%',
           height: 200,
+          flexShrink: 0,
           overflow: 'hidden',
           opacity: isActive ? 1 : 0,
           transform: isActive ? 'scale(1)' : 'scale(1.05)',
           transition: 'opacity 500ms ease 200ms, transform 600ms ease 200ms',
         }}
       >
-        <img
-          src={showLocation.photo}
-          alt={showLocation.name}
-          style={{
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-          }}
-        />
+        {showLocation.photos && showLocation.photos.length > 0 ? (
+          <PhotoReel
+            photos={showLocation.photos}
+            photoPositions={showLocation.photoPositions}
+            alt={showLocation.name}
+            isActive={isActive}
+          />
+        ) : (
+          <img
+            src={showLocation.photo}
+            alt={showLocation.name}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              objectPosition: showLocation.photoPositions?.[0] ?? 'center center',
+              transform: showLocation.photoScale ? `scale(${showLocation.photoScale})` : undefined,
+              transformOrigin: showLocation.photoPositions?.[0] ?? 'center center',
+            }}
+          />
+        )}
       </div>
 
       {/* Content */}
-      <div style={{ padding: '24px 28px 28px' }}>
+      <div
+        style={{
+          padding: '24px 28px 28px',
+          overflowY: 'auto',
+          flex: 1,
+          minHeight: 0,
+        }}
+      >
         {/* Title with character animation */}
         <h2
           style={{
             fontFamily: "'Space Grotesk', sans-serif",
             fontWeight: 600,
-            fontSize: 26,
+            fontSize: titleFontSize,
             color: '#C0C0C0',
             margin: 0,
+            paddingRight: 36,
             lineHeight: 1.2,
-            wordBreak: 'keep-all',
+            whiteSpace: showLocation.name.length > 24 ? 'normal' : 'nowrap',
           }}
         >
           {titleChars}
         </h2>
+
+        {showLocation.subheading && (
+          <span
+            style={{
+              fontFamily: "'JetBrains Mono', monospace",
+              fontWeight: 400,
+              fontSize: 10,
+              color: '#808080',
+              letterSpacing: '0.15em',
+              display: 'block',
+              marginTop: 8,
+            }}
+          >
+            {showLocation.subheading}
+          </span>
+        )}
 
         {/* Divider */}
         <div
@@ -166,42 +332,47 @@ export default function InfoCard({ location, onClose }: InfoCardProps) {
         />
 
         {/* Period */}
-        <span
-          style={{
-            fontFamily: "'JetBrains Mono', monospace",
-            fontWeight: 400,
-            fontSize: 11,
-            color: '#808080',
-            letterSpacing: '0.05em',
-            display: 'block',
-            marginBottom: 12,
-          }}
-        >
-          {showLocation.period}
-        </span>
+        {showLocation.period && (
+          <span
+            style={{
+              fontFamily: "'JetBrains Mono', monospace",
+              fontWeight: 400,
+              fontSize: 11,
+              color: '#808080',
+              letterSpacing: '0.05em',
+              display: 'block',
+              marginBottom: 12,
+            }}
+          >
+            {showLocation.period}
+          </span>
+        )}
 
         {/* Description */}
-        <p
-          style={{
-            fontFamily: "'Inter', sans-serif",
-            fontWeight: 300,
-            fontSize: 14,
-            lineHeight: 1.7,
-            color: '#A0A0A0',
-            margin: '0 0 16px 0',
-          }}
-        >
-          {showLocation.description}
-        </p>
+        {showLocation.description && (
+          <p
+            style={{
+              fontFamily: "'Inter', sans-serif",
+              fontWeight: 300,
+              fontSize: 14,
+              lineHeight: 1.7,
+              color: '#A0A0A0',
+              margin: '0 0 16px 0',
+            }}
+          >
+            {showLocation.description}
+          </p>
+        )}
 
         {/* Coordinates */}
         <span
           style={{
             fontFamily: "'JetBrains Mono', monospace",
             fontWeight: 400,
-            fontSize: 11,
+            fontSize: 10,
             color: '#606060',
-            letterSpacing: '0.05em',
+            letterSpacing: '0.03em',
+            lineHeight: 1.5,
             display: 'block',
           }}
         >

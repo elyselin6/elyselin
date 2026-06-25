@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import './StarfieldBackground.css'
 
 const VERTEX_SHADER = `
 attribute vec2 a_position;
@@ -13,134 +14,96 @@ uniform float uTime;
 uniform vec2 uResolution;
 
 #define TAU 6.28318530718
-#define PI 3.141592653589793
 
-vec2 mod289(vec2 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
-vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
-vec4 mod289(vec4 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
-
-vec3 permute(vec3 x) { return mod289(((x * 34.0) + 1.0) * x); }
-
-vec3 rand3(vec3 p) {
-  vec3 a = vec3(PI * 2.0);
-  vec3 b = vec3(PI);
-  vec3 p3 = fract((p + dot(p, a)) * b);
-  p3 += dot(p3, p3.yzx + 19.19);
-  return fract((p3.xx + p3.yz) * p3.zy);
+float hash11(float n) {
+  return fract(sin(n) * 43758.5453123);
 }
 
-vec3 fade(vec3 t) { return t * t * t * (t * (t * 6.0 - 15.0) + 10.0); }
+float hash21(vec2 p) {
+  return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+}
 
-vec3 grad3(vec3 p) {
-  vec4 q = vec4(
-    dot(p, vec3(127.1, 311.7, 74.7)),
-    dot(p, vec3(269.5, 183.3, 246.1)),
-    dot(p, vec3(113.5, 271.9, 124.6)),
-    0.0
+vec3 hash31(vec2 p) {
+  return vec3(
+    hash21(p),
+    hash21(p + 17.3),
+    hash21(p + 43.7)
   );
-  q.w = dot(p, vec3(74.7, 113.5, 271.9));
-  q = fract(sin(q) * 43758.5453);
-  q = q - 0.5;
-  return (q.xyz * q.w + q.yzw * q.x) * 0.5;
 }
 
-float noise3(vec3 p) {
-  vec3 i = floor(p);
-  vec3 f = fract(p);
-  vec3 u = fade(f);
+float valueNoise(vec2 p) {
+  vec2 i = floor(p);
+  vec2 f = fract(p);
+  f = f * f * (3.0 - 2.0 * f);
 
-  vec3 g000 = grad3(i + vec3(0.0, 0.0, 0.0));
-  vec3 g100 = grad3(i + vec3(1.0, 0.0, 0.0));
-  vec3 g010 = grad3(i + vec3(0.0, 1.0, 0.0));
-  vec3 g110 = grad3(i + vec3(1.0, 1.0, 0.0));
-  vec3 g001 = grad3(i + vec3(0.0, 0.0, 1.0));
-  vec3 g101 = grad3(i + vec3(1.0, 0.0, 1.0));
-  vec3 g011 = grad3(i + vec3(0.0, 1.0, 1.0));
-  vec3 g111 = grad3(i + vec3(1.0, 1.0, 1.0));
+  float a = hash21(i);
+  float b = hash21(i + vec2(1.0, 0.0));
+  float c = hash21(i + vec2(0.0, 1.0));
+  float d = hash21(i + vec2(1.0, 1.0));
 
-  float n000 = dot(g000, f);
-  float n100 = dot(g100, f - vec3(1.0, 0.0, 0.0));
-  float n010 = dot(g010, f - vec3(0.0, 1.0, 0.0));
-  float n110 = dot(g110, f - vec3(1.0, 1.0, 0.0));
-  float n001 = dot(g001, f - vec3(0.0, 0.0, 1.0));
-  float n101 = dot(g101, f - vec3(1.0, 0.0, 1.0));
-  float n011 = dot(g011, f - vec3(0.0, 1.0, 1.0));
-  float n111 = dot(g111, f - vec3(1.0, 1.0, 1.0));
-
-  float nx00 = mix(n000, n100, u.x);
-  float nx01 = mix(n001, n101, u.x);
-  float nx10 = mix(n010, n110, u.x);
-  float nx11 = mix(n011, n111, u.x);
-
-  float nxy0 = mix(nx00, nx10, u.y);
-  float nxy1 = mix(nx01, nx11, u.y);
-
-  return 0.5 + 0.5 * mix(nxy0, nxy1, u.z);
+  return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
 }
 
-float dotStars(vec2 uv, float t) {
-  vec2 id = floor(uv);
-  vec2 f = fract(uv);
-  vec3 r = rand3(vec3(id, 0.0));
-  vec2 center = vec2(cos(r.x * TAU), sin(r.y * TAU)) * 0.4 + 0.5;
-  float dist = length(f - center);
-  float twinkle = sin(r.z * TAU + t * r.x) * 0.5 + 0.5;
-  return (1.0 - smoothstep(0.0, 0.03, dist)) * twinkle * 0.35;
+float smoothNebula(vec2 p) {
+  float n = 0.0;
+  float amp = 0.55;
+  float freq = 1.0;
+  for (int i = 0; i < 3; i++) {
+    n += valueNoise(p * freq) * amp;
+    freq *= 2.0;
+    amp *= 0.5;
+  }
+  return n;
 }
 
-float star4(vec2 p, float size) {
-  float angle = atan(p.y, p.x);
-  float radius = length(p);
-  float points = abs(cos(angle * 2.0));
-  points = pow(points, 0.22);
-  float edge = size * (0.18 + points * 0.82);
-  float body = 1.0 - smoothstep(edge * 0.55, edge, radius);
-  float core = 1.0 - smoothstep(0.0, size * 0.18, radius);
-  return body + core * 0.6;
+float milkyWayBand(vec2 p) {
+  vec2 band = mat2(0.82, -0.57, 0.57, 0.82) * p;
+  float core = exp(-band.x * band.x * 1.8) * exp(-band.y * band.y * 0.06);
+  float haze = exp(-band.x * band.x * 0.55) * exp(-band.y * band.y * 0.025);
+  return core * 1.0 + haze * 0.35;
 }
 
-float twinkleStars(vec2 uv, float t) {
+float stars(vec2 uv, float density, float sizeMin, float sizeMax, float t, float seed) {
   vec2 id = floor(uv);
   vec2 f = fract(uv) - 0.5;
-  vec3 r = rand3(vec3(id, 1.0));
+  vec3 r = hash31(id + seed);
 
-  if (r.x < 0.82) return 0.0;
+  if (r.x > density) return 0.0;
 
-  float size = 0.06 + r.y * 0.08;
-  float star = star4(f, size);
-
-  float twinkle = sin(r.z * TAU * 2.0 + t * (1.5 + r.y * 2.0)) * 0.5 + 0.5;
-  twinkle = pow(twinkle, 2.0);
-  float shimmer = sin(r.x * TAU * 3.0 + t * 4.0) * 0.3 + 0.7;
-
-  return star * twinkle * shimmer;
+  vec2 center = (r.yz - 0.5) * 0.92;
+  float dist = length(f - center);
+  float size = mix(sizeMin, sizeMax, r.y);
+  float core = exp(-(dist * dist) / (size * size));
+  float twinkle = 0.72 + 0.28 * sin(t * (0.7 + r.z * 2.5) + r.x * TAU);
+  float brightness = 0.25 + r.z * 0.75;
+  return core * twinkle * brightness;
 }
 
 void main() {
   vec2 uv = gl_FragCoord.xy / uResolution;
   vec2 p = (uv - 0.5) * uResolution / min(uResolution.x, uResolution.y);
-  float t = uTime * 0.5;
-  p = mat2(cos(t * 0.1), -sin(t * 0.1), sin(t * 0.1), cos(t * 0.1)) * p;
+  float t = uTime * 0.35;
+  p += vec2(t * 0.004, t * 0.002);
 
+  float band = milkyWayBand(p);
   vec3 col = vec3(0.0);
-  for (int i = 0; i < 3; i++) {
-    float fi = float(i);
-    float scale = fi * 2.0 + 1.0;
-    vec2 uvLayer = p * scale + t * 0.05 * (fi + 1.0);
-    float dim = 1.0 - fi * 0.25;
-    col += dotStars(uvLayer, t + fi * 10.0) * dim * vec3(0.7, 0.72, 0.78);
-  }
 
-  for (int i = 0; i < 2; i++) {
-    float fi = float(i);
-    float scale = fi * 1.5 + 2.5;
-    vec2 uvLayer = p * scale + t * 0.03 * (fi + 1.0);
-    float twinkleField = twinkleStars(uvLayer, t + fi * 7.0);
-    float brightness = 1.0 - fi * 0.3;
-    col += twinkleField * brightness * vec3(0.85, 0.88, 0.95);
-  }
+  float nebula = smoothNebula(p * 0.55 + vec2(1.7, 0.4));
+  col += vec3(0.09, 0.095, 0.11) * nebula * band * 0.55;
 
-  col = col / (1.0 + col * 0.8);
+  float starField = 0.0;
+  starField += stars(p * 95.0, 0.68, 0.008, 0.018, t, 1.0);
+  starField += stars(p * 72.0 + 3.1, 0.62, 0.010, 0.022, t, 2.0);
+  starField += stars(p * 52.0 + 7.4, 0.56, 0.012, 0.028, t, 3.0);
+  starField += stars(p * 34.0 + 11.2, 0.38, 0.016, 0.038, t, 4.0);
+  starField += stars(p * 20.0 + 15.8, 0.14, 0.022, 0.055, t, 5.0);
+
+  starField *= 1.0 + band * 2.2;
+  col += vec3(0.88, 0.91, 1.0) * starField;
+
+  float vignette = 1.0 - dot(uv - 0.5, uv - 0.5) * 0.55;
+  col *= vignette;
+
   gl_FragColor = vec4(col, 1.0);
 }
 `
@@ -150,62 +113,68 @@ export default function StarfieldBackground() {
   const rafRef = useRef<number>(0)
 
   useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
+    const maybeCanvas = canvasRef.current
+    if (!maybeCanvas) return
 
-    const gl = canvas.getContext('webgl', { alpha: false, antialias: false })
-    if (!gl) return
+    const maybeGl = maybeCanvas.getContext('webgl', { alpha: false, antialias: false })
+    if (!maybeGl) return
 
-    // Compile shaders
-    function createShader(gl: WebGLRenderingContext, type: number, source: string) {
-      const shader = gl.createShader(type)!
-      gl.shaderSource(shader, source)
-      gl.compileShader(shader)
-      if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-        console.error('Shader compile error:', gl.getShaderInfoLog(shader))
-        gl.deleteShader(shader)
+    const canvasEl: HTMLCanvasElement = maybeCanvas
+    const glCtx: WebGLRenderingContext = maybeGl
+
+    function createShader(type: number, source: string) {
+      const shader = glCtx.createShader(type)
+      if (!shader) return null
+      glCtx.shaderSource(shader, source)
+      glCtx.compileShader(shader)
+      if (!glCtx.getShaderParameter(shader, glCtx.COMPILE_STATUS)) {
+        console.error('Shader compile error:', glCtx.getShaderInfoLog(shader))
+        glCtx.deleteShader(shader)
         return null
       }
       return shader
     }
 
-    const vs = createShader(gl, gl.VERTEX_SHADER, VERTEX_SHADER)
-    const fs = createShader(gl, gl.FRAGMENT_SHADER, FRAGMENT_SHADER)
+    const vs = createShader(glCtx.VERTEX_SHADER, VERTEX_SHADER)
+    const fs = createShader(glCtx.FRAGMENT_SHADER, FRAGMENT_SHADER)
     if (!vs || !fs) return
 
-    const program = gl.createProgram()!
-    gl.attachShader(program, vs)
-    gl.attachShader(program, fs)
-    gl.linkProgram(program)
+    const program = glCtx.createProgram()
+    if (!program) return
 
-    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-      console.error('Program link error:', gl.getProgramInfoLog(program))
+    glCtx.attachShader(program, vs)
+    glCtx.attachShader(program, fs)
+    glCtx.linkProgram(program)
+
+    if (!glCtx.getProgramParameter(program, glCtx.LINK_STATUS)) {
+      console.error('Program link error:', glCtx.getProgramInfoLog(program))
       return
     }
 
-    gl.useProgram(program)
+    glCtx.useProgram(program)
 
-    // Full-screen quad
-    const positionBuffer = gl.createBuffer()
-    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer)
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-      -1, -1, 1, -1, -1, 1,
-      -1, 1, 1, -1, 1, 1
-    ]), gl.STATIC_DRAW)
+    const positionBuffer = glCtx.createBuffer()
+    if (!positionBuffer) return
 
-    const posLoc = gl.getAttribLocation(program, 'a_position')
-    gl.enableVertexAttribArray(posLoc)
-    gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0)
+    glCtx.bindBuffer(glCtx.ARRAY_BUFFER, positionBuffer)
+    glCtx.bufferData(
+      glCtx.ARRAY_BUFFER,
+      new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]),
+      glCtx.STATIC_DRAW
+    )
 
-    const uTime = gl.getUniformLocation(program, 'uTime')
-    const uResolution = gl.getUniformLocation(program, 'uResolution')
+    const posLoc = glCtx.getAttribLocation(program, 'a_position')
+    glCtx.enableVertexAttribArray(posLoc)
+    glCtx.vertexAttribPointer(posLoc, 2, glCtx.FLOAT, false, 0, 0)
+
+    const uTime = glCtx.getUniformLocation(program, 'uTime')
+    const uResolution = glCtx.getUniformLocation(program, 'uResolution')
 
     function resize() {
-      if (!canvas) return
-      const dpr = Math.min(window.devicePixelRatio, 1.5)
-      canvas.width = window.innerWidth * dpr
-      canvas.height = window.innerHeight * dpr
-      gl!.viewport(0, 0, canvas.width, canvas.height)
+      const dpr = Math.min(window.devicePixelRatio, 2)
+      canvasEl.width = window.innerWidth * dpr
+      canvasEl.height = window.innerHeight * dpr
+      glCtx.viewport(0, 0, canvasEl.width, canvasEl.height)
     }
 
     resize()
@@ -214,11 +183,10 @@ export default function StarfieldBackground() {
     const startTime = performance.now()
 
     function render() {
-      if (!gl || !canvas) return
       const elapsed = (performance.now() - startTime) / 1000
-      gl.uniform1f(uTime, elapsed)
-      gl.uniform2f(uResolution, canvas.width, canvas.height)
-      gl.drawArrays(gl.TRIANGLES, 0, 6)
+      if (uTime) glCtx.uniform1f(uTime, elapsed)
+      if (uResolution) glCtx.uniform2f(uResolution, canvasEl.width, canvasEl.height)
+      glCtx.drawArrays(glCtx.TRIANGLES, 0, 6)
       rafRef.current = requestAnimationFrame(render)
     }
 
@@ -227,24 +195,12 @@ export default function StarfieldBackground() {
     return () => {
       cancelAnimationFrame(rafRef.current)
       window.removeEventListener('resize', resize)
-      gl.deleteProgram(program)
-      gl.deleteShader(vs)
-      gl.deleteShader(fs)
-      gl.deleteBuffer(positionBuffer)
+      glCtx.deleteProgram(program)
+      glCtx.deleteShader(vs)
+      glCtx.deleteShader(fs)
+      glCtx.deleteBuffer(positionBuffer)
     }
   }, [])
 
-  return (
-    <canvas
-      ref={canvasRef}
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
-        zIndex: 0,
-      }}
-    />
-  )
+  return <canvas ref={canvasRef} className="starfield-background" aria-hidden="true" />
 }
