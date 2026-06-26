@@ -8,6 +8,13 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 3000,
+    host: true,
+    strictPort: true,
+  },
+  preview: {
+    port: 4173,
+    host: true,
+    strictPort: true,
   },
   resolve: {
     alias: {

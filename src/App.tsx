@@ -97,8 +97,11 @@ export default function App() {
   }, [])
 
   const currentLocation = activeLocations[activeCardIndex] ?? null
-  const canGoPrev = activeCardIndex > 0
-  const canGoNext = activeCardIndex < activeLocations.length - 1
+  const hasMultipleCards = activeLocations.length > 1
+
+  const goToNextCard = useCallback(() => {
+    setActiveCardIndex((index) => (index + 1) % activeLocations.length)
+  }, [activeLocations.length])
 
   return (
     <div
@@ -134,49 +137,10 @@ export default function App() {
             width: 360,
           }}
         >
-          {canGoPrev && (
+          {hasMultipleCards && (
             <button
               type="button"
-              onClick={() => setActiveCardIndex((index) => index - 1)}
-              aria-label="Previous location card"
-              style={{
-                position: 'absolute',
-                left: -44,
-                top: '50%',
-                transform: 'translateY(-50%)',
-                width: 32,
-                height: 32,
-                borderRadius: '50%',
-                border: '1px solid rgba(192, 192, 192, 0.25)',
-                background: 'rgba(0, 0, 0, 0.55)',
-                color: '#C0C0C0',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                transition: 'background 200ms ease, border-color 200ms ease',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(192, 192, 192, 0.12)'
-                e.currentTarget.style.borderColor = 'rgba(192, 192, 192, 0.45)'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'rgba(0, 0, 0, 0.55)'
-                e.currentTarget.style.borderColor = 'rgba(192, 192, 192, 0.25)'
-              }}
-            >
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                <path d="M9 2L4 7L9 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </button>
-          )}
-
-          <InfoCard key={currentLocation.id} location={currentLocation} onClose={handleCloseCards} embedded />
-
-          {canGoNext && (
-            <button
-              type="button"
-              onClick={() => setActiveCardIndex((index) => index + 1)}
+              onClick={goToNextCard}
               aria-label="Next location card"
               style={{
                 position: 'absolute',
@@ -209,6 +173,8 @@ export default function App() {
               </svg>
             </button>
           )}
+
+          <InfoCard key={currentLocation.id} location={currentLocation} onClose={handleCloseCards} embedded />
         </div>
       )}
     </div>

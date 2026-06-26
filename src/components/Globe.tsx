@@ -124,6 +124,15 @@ function createCopperMaterial(): THREE.MeshPhongMaterial {
   })
 }
 
+function createBronzeMaterial(): THREE.MeshPhongMaterial {
+  return new THREE.MeshPhongMaterial({
+    color: 0xcd7f32,
+    emissive: 0x2a1808,
+    specular: 0xffeedd,
+    shininess: 48,
+  })
+}
+
 function createGoldMaterial(): THREE.MeshPhongMaterial {
   return new THREE.MeshPhongMaterial({
     color: 0xffd700,
@@ -200,7 +209,7 @@ async function createGoldCrestTexture(src: string): Promise<THREE.CanvasTexture>
     if (alpha < 20) continue
 
     const luminance = (0.299 * red + 0.587 * green + 0.114 * blue) / 255
-    if (luminance < 0.06) {
+    if (luminance < 0.08 || (red < 40 && green < 40 && blue < 40)) {
       imageData.data[i + 3] = 0
       continue
     }
@@ -221,25 +230,20 @@ function createUpennCrestMarker(texture: THREE.Texture): THREE.Group {
   const crestWidth = 1.35
   const crestHeight = 1.55
 
-  const backing = new THREE.Mesh(
-    new THREE.BoxGeometry(crestWidth * 0.88, 0.1, crestHeight * 0.88),
-    createGoldMaterial()
-  )
-  backing.position.y = 0.05
-
   const crest = new THREE.Mesh(
     new THREE.PlaneGeometry(crestWidth, crestHeight),
     new THREE.MeshBasicMaterial({
       map: texture,
       transparent: true,
+      alphaTest: 0.05,
       depthWrite: false,
       side: THREE.DoubleSide,
     })
   )
   crest.rotation.x = -Math.PI / 2
-  crest.position.y = 0.12
+  crest.position.y = 0.06
 
-  marker.add(backing, crest)
+  marker.add(crest)
   return marker
 }
 
@@ -377,12 +381,54 @@ function createTaipei101Marker(material: THREE.MeshPhongMaterial): THREE.Group {
   return marker
 }
 
+function createHollywoodSignMarker(material: THREE.MeshPhongMaterial): THREE.Group {
+  const marker = new THREE.Group()
+
+  const hillLeft = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.12, 0.45), material)
+  hillLeft.position.set(-0.32, 0.06, 0)
+  hillLeft.rotation.z = 0.28
+  marker.add(hillLeft)
+
+  const hillRight = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.12, 0.45), material)
+  hillRight.position.set(0.32, 0.06, 0)
+  hillRight.rotation.z = -0.28
+  marker.add(hillRight)
+
+  const hillCenter = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.08, 0.4), material)
+  hillCenter.position.set(0, 0.18, 0)
+  marker.add(hillCenter)
+
+  const letters = [
+    { x: -0.42, h: 0.38 },
+    { x: -0.32, h: 0.34 },
+    { x: -0.22, h: 0.36 },
+    { x: -0.12, h: 0.36 },
+    { x: -0.02, h: 0.4 },
+    { x: 0.08, h: 0.42 },
+    { x: 0.18, h: 0.34 },
+    { x: 0.28, h: 0.34 },
+    { x: 0.38, h: 0.36 },
+  ]
+
+  letters.forEach(({ x, h }) => {
+    const letter = new THREE.Mesh(new THREE.BoxGeometry(0.07, h, 0.04), material)
+    letter.position.set(x, 0.12 + h / 2, 0)
+    marker.add(letter)
+  })
+
+  return marker
+}
+
 function isGoldLocation(locationId: string): boolean {
   return locationId === 'bellevue' || locationId === 'upenn' || locationId === 'taipei'
 }
 
 function isCopperLocation(locationId: string): boolean {
-  return locationId === 'madrid' || locationId === 'kuala-lumpur'
+  return locationId === 'malaysia'
+}
+
+function isBronzeLocation(locationId: string): boolean {
+  return locationId === 'los-angeles'
 }
 
 async function createMarkerForLocation(location: LocationData): Promise<THREE.Object3D> {
@@ -399,8 +445,11 @@ async function createMarkerForLocation(location: LocationData): Promise<THREE.Ob
   if (location.id === 'madrid') {
     return createMetropolisMarker(createCopperMaterial())
   }
-  if (location.id === 'kuala-lumpur') {
+  if (location.id === 'malaysia') {
     return createKlccTwinTowersMarker(createCopperMaterial())
+  }
+  if (location.id === 'los-angeles') {
+    return createHollywoodSignMarker(createBronzeMaterial())
   }
   return createDotMarker(createSilverMaterial())
 }
@@ -437,6 +486,7 @@ function getMarkerDefaultColor(marker: THREE.Object3D): number {
   const locationId = (marker.userData.location as LocationData).id
   if (isGoldLocation(locationId)) return 0xffd700
   if (isCopperLocation(locationId)) return 0xb87333
+  if (isBronzeLocation(locationId)) return 0xcd7f32
   return 0xc0c0c0
 }
 
@@ -444,13 +494,14 @@ function getMarkerHoverColor(marker: THREE.Object3D): number {
   const locationId = (marker.userData.location as LocationData).id
   if (isGoldLocation(locationId)) return 0xfff0a0
   if (isCopperLocation(locationId)) return 0xe8a060
+  if (isBronzeLocation(locationId)) return 0xe8a850
   return 0xffd700
 }
 
 const MARKER_SIZE_MULTIPLIER = 1.3
-const DOT_MARKER_SIZE_MULTIPLIER = 0.8
+const DOT_MARKER_SIZE_MULTIPLIER = 0.56
 
-const CUSTOM_MARKER_IDS = new Set(['bellevue', 'upenn', 'taipei', 'madrid', 'kuala-lumpur'])
+const CUSTOM_MARKER_IDS = new Set(['bellevue', 'upenn', 'taipei', 'malaysia', 'los-angeles'])
 
 function usesDotMarker(locationId: string): boolean {
   return !CUSTOM_MARKER_IDS.has(locationId)
@@ -459,8 +510,9 @@ function usesDotMarker(locationId: string): boolean {
 function getMarkerBaseScale(marker: THREE.Object3D): number {
   const locationId = (marker.userData.location as LocationData).id
   let scale = 1
-  if (locationId === 'taipei' || locationId === 'madrid') scale = 1.05
-  else if (locationId === 'kuala-lumpur') scale = 1.05 * 1.44
+  if (locationId === 'taipei') scale = 1.05
+  else if (locationId === 'malaysia') scale = 1.05 * 1.44
+  else if (locationId === 'los-angeles') scale = 1.05
   else if (isGoldLocation(locationId)) scale = 1.15
   if (usesDotMarker(locationId)) scale *= DOT_MARKER_SIZE_MULTIPLIER
   return scale * MARKER_SIZE_MULTIPLIER

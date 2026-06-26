@@ -27,12 +27,32 @@ export const locations: LocationData[] = [
     photo: '/bellevue.jpg',
   },
   {
+    id: 'portland',
+    name: 'Portland, Oregon',
+    period: 'Last visited May 2025',
+    coordinates: '45.5152° N, 122.6784° W',
+    lat: 45.5152,
+    lng: -122.6784,
+    photo: '/portland.jpg',
+    photoPositions: ['center center'],
+  },
+  {
+    id: 'vancouver',
+    name: 'Vancouver, Canada',
+    period: 'Last visited June 2024',
+    coordinates: '49.2827° N, 123.1207° W',
+    lat: 49.2827,
+    lng: -123.1207,
+    photo: '/vancouver.jpg',
+    photoPositions: ['center center'],
+  },
+  {
     id: 'upenn',
     name: 'University of Pennsylvania',
     subheading: 'UNIVERSITY',
     period: '2024-2028',
     description:
-      'My current home! I\'m studying International Studies and Business in the Huntsman Program, concentrating in Entrepreneurship and Real Estate at Wharton. Outside the classroom, I enjoy runs on the Schuylkill trail or dinners with friends.',
+      'My current home! Studying International Studies and Business in the Huntsman Program, concentrating in Entrepreneurship and Real Estate at Wharton. Outside the classroom, I enjoy runs on the Schuylkill trail or dinners with friends.',
     coordinates: '39.9522° N, 75.1934° W',
     lat: 39.9522,
     lng: -75.1934,
@@ -49,6 +69,14 @@ export const locations: LocationData[] = [
     lat: 39.9526,
     lng: -75.1652,
     photo: '/philadelphia-realtor.jpg',
+  },
+  {
+    id: 'spain',
+    name: 'Spain',
+    coordinates: '40.3100° N, 3.6400° W',
+    lat: 40.31,
+    lng: -3.64,
+    photo: '/madrid/madrid-1.png',
   },
   {
     id: 'madrid',
@@ -71,16 +99,48 @@ export const locations: LocationData[] = [
     photoPositions: ['center center', 'center center', 'center 8%', 'center center', 'center center'],
   },
   {
+    id: 'malaysia',
+    name: 'Malaysia',
+    coordinates: '3.5900° N, 101.4300° E',
+    lat: 3.59,
+    lng: 101.43,
+    photo: '/kuala-lumpur.jpg',
+    photoPositions: ['50% 45%'],
+    photoScale: 1.25,
+  },
+  {
     id: 'kuala-lumpur',
     name: 'Kuala Lumpur, Malaysia',
     subheading: 'CORPORATE DEVELOPMENT INTERN',
     period: 'June — August 2026',
+    description:
+      'Learning what it takes to run a luxury 5-star hotel at EQ Kuala Lumpur',
     coordinates: '3.1579° N, 101.7116° E',
     lat: 3.1579,
     lng: 101.7116,
     photo: '/kuala-lumpur.jpg',
     photoPositions: ['50% 45%'],
     photoScale: 1.25,
+  },
+  {
+    id: 'penang',
+    name: 'Penang, Malaysia',
+    period: '2012',
+    coordinates: '5.4172° N, 100.3388° E',
+    lat: 5.4172,
+    lng: 100.3388,
+    photo: '/penang.jpg',
+    photoPositions: ['center center'],
+  },
+  {
+    id: 'melaka',
+    name: 'Melaka, Malaysia',
+    period: '2012',
+    coordinates: '2.1951° N, 102.2486° E',
+    lat: 2.1951,
+    lng: 102.2486,
+    photo: '/melaka.jpg',
+    photoPositions: ['center center'],
   },
   {
     id: 'singapore',
@@ -93,18 +153,28 @@ export const locations: LocationData[] = [
     lat: 1.2834,
     lng: 103.8607,
     photo: '/singapore.png',
+    photoPositions: ['center 38%'],
   },
   {
     id: 'buenos-aires',
     name: 'Buenos Aires, Argentina',
     period: '2026 · 2008',
     description:
-      'Last visited on a Huntsman Global Immersion trip. We met with MercadoLibre, energy infrastructure leaders, the U.S. Ambassador, and Argentina\'s Minister of Foreign Affairs. A front-row look at one of the world\'s most volatile and fascinating economies.',
+      'Last visited on a Huntsman Global Immersion trip. We met with Mercado Libre, energy infrastructure leaders, the U.S. Ambassador, and Argentina\'s Minister of Foreign Affairs. A front-row look at one of the world\'s most volatile and fascinating economies.',
     coordinates: '34.6037° S, 58.3816° W',
     lat: -34.6037,
     lng: -58.3816,
     photo: '/buenos-aires.jpg',
     photoPositions: ['center 72%'],
+  },
+  {
+    id: 'lima',
+    name: 'Lima, Peru',
+    period: '2022',
+    coordinates: '12.0464° S, 77.0428° W',
+    lat: -12.0464,
+    lng: -77.0428,
+    photo: '/lima.jpg',
   },
   {
     id: 'sacred-valley',
@@ -127,6 +197,15 @@ export const locations: LocationData[] = [
     photo: '/mexico-city.jpg',
   },
   {
+    id: 'guanacaste',
+    name: 'Guanacaste, Costa Rica',
+    period: '2022',
+    coordinates: '10.4975° N, 85.3500° W',
+    lat: 10.4975,
+    lng: -85.35,
+    photo: '/guanacaste.jpg',
+  },
+  {
     id: 'ho-chi-minh-city',
     name: 'Ho Chi Minh City, Vietnam',
     period: '2024',
@@ -143,6 +222,44 @@ export const locations: LocationData[] = [
     lat: 13.0969,
     lng: -59.6132,
     photo: '/bridgetown.jpg',
+  },
+  {
+    id: 'hawaii',
+    name: 'Hawaii',
+    coordinates: '20.7100° N, 156.6400° W',
+    lat: 20.71,
+    lng: -156.64,
+    photo: '/oahu.jpg',
+    photoPositions: ['center 42%'],
+  },
+  {
+    id: 'oahu',
+    name: 'Oahu, Hawaii',
+    period: '2021',
+    coordinates: '21.4389° N, 158.0001° W',
+    lat: 21.4389,
+    lng: -158.0001,
+    photo: '/oahu.jpg',
+    photoPositions: ['center 42%'],
+  },
+  {
+    id: 'big-island',
+    name: 'Big Island, Hawaii',
+    period: '2021',
+    coordinates: '19.8968° N, 155.5828° W',
+    lat: 19.8968,
+    lng: -155.5828,
+    photo: '/big-island.jpg',
+    photoPositions: ['center 40%'],
+  },
+  {
+    id: 'maui',
+    name: 'Maui, Hawaii',
+    period: '2015',
+    coordinates: '20.7984° N, 156.3319° W',
+    lat: 20.7984,
+    lng: -156.3319,
+    photo: '/maui.jpg',
   },
   {
     id: 'washington-dc',
@@ -162,7 +279,21 @@ export const locations: LocationData[] = [
     coordinates: '40.7587° N, 73.9787° W',
     lat: 40.7587,
     lng: -73.9787,
-    photo: '/nyc.jpg',
+    photo: '/nyc/nyc-1.jpg',
+    photos: [
+      '/nyc/nyc-1.jpg',
+      '/nyc/nyc-2.jpg',
+      '/nyc/nyc-3.jpg',
+      '/nyc/nyc-4.jpg',
+      '/nyc/nyc-5.jpg',
+    ],
+    photoPositions: [
+      'center center',
+      'center center',
+      'center center',
+      'center center',
+      'center center',
+    ],
   },
   {
     id: 'kumano-kodo',
@@ -212,6 +343,33 @@ export const locations: LocationData[] = [
     lat: 47.4979,
     lng: 19.0402,
     photo: '/budapest.jpg',
+  },
+  {
+    id: 'paris',
+    name: 'Paris, France',
+    period: '2022',
+    coordinates: '48.8566° N, 2.3522° E',
+    lat: 48.8566,
+    lng: 2.3522,
+    photo: '/paris.jpg',
+  },
+  {
+    id: 'amsterdam',
+    name: 'Amsterdam, Netherlands',
+    period: '2024',
+    coordinates: '52.3676° N, 4.9041° E',
+    lat: 52.3676,
+    lng: 4.9041,
+    photo: '/amsterdam.jpg',
+  },
+  {
+    id: 'london',
+    name: 'London, United Kingdom',
+    period: '2018',
+    coordinates: '51.5074° N, 0.1278° W',
+    lat: 51.5074,
+    lng: -0.1278,
+    photo: '/london.jpg',
   },
   {
     id: 'northern-italy',
@@ -270,6 +428,33 @@ export const locations: LocationData[] = [
     photoPositions: ['center 55%'],
   },
   {
+    id: 'san-sebastian',
+    name: 'San Sebastián, Spain',
+    period: '2024',
+    coordinates: '43.3183° N, 1.9812° W',
+    lat: 43.3183,
+    lng: -1.9812,
+    photo: '/san-sebastian.jpg',
+    photoPositions: ['center 35%'],
+  },
+  {
+    id: 'bilbao',
+    name: 'Bilbao, Spain',
+    period: '2024',
+    coordinates: '43.2627° N, 2.9253° W',
+    lat: 43.2627,
+    lng: -2.9253,
+    photo: '/bilbao.jpg',
+  },
+  {
+    id: 'switzerland',
+    name: 'Switzerland',
+    coordinates: '46.5300° N, 7.4800° E',
+    lat: 46.53,
+    lng: 7.48,
+    photo: '/zurich.jpg',
+  },
+  {
     id: 'zurich',
     name: 'Zurich, Switzerland',
     period: '2026 · 2022',
@@ -308,8 +493,141 @@ export const locations: LocationData[] = [
     photoPositions: ['50% 38%'],
   },
   {
+    id: 'atlanta',
+    name: 'Atlanta, Georgia',
+    period: '2020',
+    coordinates: '33.7490° N, 84.3880° W',
+    lat: 33.749,
+    lng: -84.388,
+    photo: '/atlanta.jpg',
+    photoPositions: ['center center'],
+  },
+  {
+    id: 'new-orleans',
+    name: 'New Orleans, Louisiana',
+    period: '2020',
+    coordinates: '29.9511° N, 90.0715° W',
+    lat: 29.9511,
+    lng: -90.0715,
+    photo: '/new-orleans.jpg',
+    photoPositions: ['center center'],
+  },
+  {
+    id: 'florida',
+    name: 'Florida',
+    coordinates: '28.9400° N, 81.8300° W',
+    lat: 28.94,
+    lng: -81.83,
+    photo: '/orlando.jpg',
+    photoPositions: ['center center'],
+  },
+  {
+    id: 'tampa',
+    name: 'Tampa, Florida',
+    period: '2021',
+    coordinates: '27.9506° N, 82.4572° W',
+    lat: 27.9506,
+    lng: -82.4572,
+    photo: '/tampa.jpg',
+    photoPositions: ['center center'],
+  },
+  {
+    id: 'orlando',
+    name: 'Orlando, Florida',
+    period: '2021',
+    coordinates: '28.5383° N, 81.3792° W',
+    lat: 28.5383,
+    lng: -81.3792,
+    photo: '/orlando.jpg',
+    photoPositions: ['center center'],
+  },
+  {
+    id: 'jacksonville',
+    name: 'Jacksonville, Florida',
+    period: '2021',
+    coordinates: '30.3322° N, 81.6557° W',
+    lat: 30.3322,
+    lng: -81.6557,
+    photo: '/jacksonville.jpg',
+    photoPositions: ['center center'],
+  },
+  {
+    id: 'los-angeles',
+    name: 'Los Angeles, California',
+    period: 'Last visited November 2024',
+    coordinates: '34.0522° N, 118.2437° W',
+    lat: 34.0522,
+    lng: -118.2437,
+    photo: '/los-angeles/la-1.jpg',
+    photos: [
+      '/los-angeles/la-1.jpg',
+      '/los-angeles/la-2.jpg',
+      '/los-angeles/la-3.jpg',
+      '/los-angeles/la-4.jpg',
+    ],
+    photoPositions: [
+      'center 52%',
+      'center 40%',
+      'center 55%',
+      'center 38%',
+    ],
+  },
+  {
+    id: 'armada-ventures',
+    name: 'Armada Ventures',
+    subheading: 'VENTURE ANALYST',
+    period: 'June 2026 — Present',
+    description: 'https://www.armada-ventures.com/',
+    coordinates: '34.0522° N, 118.2437° W',
+    lat: 34.0522,
+    lng: -118.2437,
+    photo: '/armada-ventures.jpg',
+  },
+  {
+    id: 'las-vegas',
+    name: 'Las Vegas, Nevada',
+    period: '2022 · 2019 · 2014',
+    coordinates: '36.1699° N, 115.1398° W',
+    lat: 36.1699,
+    lng: -115.1398,
+    photo: '/las-vegas.jpg',
+  },
+  {
+    id: 'zion',
+    name: 'Zion National Park, Utah',
+    period: '2019',
+    coordinates: '37.2982° N, 113.0263° W',
+    lat: 37.2982,
+    lng: -113.0263,
+    photo: '/zion.jpg',
+  },
+  {
+    id: 'bay-area',
+    name: 'Bay Area, California',
+    period: 'Last visited May 2024',
+    coordinates: '37.7749° N, 122.4194° W',
+    lat: 37.7749,
+    lng: -122.4194,
+    photo: '/bay-area/bay-area-1.jpg',
+    photos: [
+      '/bay-area/bay-area-1.jpg',
+      '/bay-area/bay-area-2.jpg',
+      '/bay-area/bay-area-3.jpg',
+      '/bay-area/bay-area-4.jpg',
+      '/bay-area/bay-area-5.jpg',
+    ],
+    photoPositions: [
+      'center 58%',
+      'center 52%',
+      'center 46%',
+      'center 40%',
+      'center 32%',
+    ],
+  },
+  {
     id: 'taipei',
     name: 'Taipei, Taiwan',
+    subheading: 'MY ROOTS',
     period: 'Last visited June 2026',
     description:
       'Where my grandparents grew up and where I spent many childhood summers — visiting family, going to camp, and eating some of the best food in the world.',
@@ -321,8 +639,22 @@ export const locations: LocationData[] = [
       '/taipei/taipei-1.jpg',
       '/taipei/taipei-2.png',
       '/taipei/taipei-3.png',
+      '/taipei/taipei-4.jpg',
+      '/taipei/taipei-5.jpg',
+      '/taipei/taipei-6.jpg',
+      '/taipei/taipei-7.jpg',
+      '/taipei/taipei-8.jpg',
     ],
-    photoPositions: ['center center', 'center center', 'center 15%'],
+    photoPositions: [
+      'center center',
+      'center center',
+      'center 15%',
+      'center 38%',
+      'center 38%',
+      'center 40%',
+      'center 38%',
+      'center 35%',
+    ],
   },
   {
     id: 'taipei-marriott',
@@ -338,20 +670,41 @@ export const locations: LocationData[] = [
   },
 ]
 
-const CARD_ONLY_LOCATION_IDS = new Set(['philadelphia', 'taipei-marriott'])
+const MARKER_GROUP_MEMBERS: Record<string, readonly string[]> = {
+  spain: ['madrid', 'granada', 'sevilla', 'san-sebastian', 'bilbao'],
+  switzerland: ['zurich', 'geneva', 'zermatt'],
+  florida: ['tampa', 'orlando', 'jacksonville'],
+  hawaii: ['oahu', 'big-island', 'maui'],
+  malaysia: ['kuala-lumpur', 'penang', 'melaka'],
+}
+
+const COMBINED_MARKER_GROUPS: Record<string, readonly string[]> = {
+  upenn: ['upenn', 'philadelphia'],
+  taipei: ['taipei', 'taipei-marriott'],
+  'los-angeles': ['los-angeles', 'armada-ventures'],
+  ...MARKER_GROUP_MEMBERS,
+}
+
+const CARD_ONLY_LOCATION_IDS = new Set([
+  'philadelphia',
+  'taipei-marriott',
+  'armada-ventures',
+  ...Object.values(MARKER_GROUP_MEMBERS).flat(),
+])
 
 export function getGlobeLocations(): LocationData[] {
   return locations.filter((location) => !CARD_ONLY_LOCATION_IDS.has(location.id))
 }
 
-export function getLocationsForMarker(markerId: string): LocationData[] {
-  if (markerId === 'upenn') {
-    return locations.filter((location) => location.id === 'upenn' || location.id === 'philadelphia')
-  }
+function getLocationsByIds(ids: readonly string[]): LocationData[] {
+  return ids
+    .map((id) => locations.find((location) => location.id === id))
+    .filter((location): location is LocationData => location !== undefined)
+}
 
-  if (markerId === 'taipei') {
-    return locations.filter((location) => location.id === 'taipei' || location.id === 'taipei-marriott')
-  }
+export function getLocationsForMarker(markerId: string): LocationData[] {
+  const groupIds = COMBINED_MARKER_GROUPS[markerId]
+  if (groupIds) return getLocationsByIds(groupIds)
 
   const location = locations.find((entry) => entry.id === markerId)
   return location ? [location] : []

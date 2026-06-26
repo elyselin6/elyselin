@@ -350,18 +350,39 @@ export default function InfoCard({ location, onClose, embedded = false }: InfoCa
 
         {/* Description */}
         {showLocation.description && (
-          <p
-            style={{
-              fontFamily: "'Inter', sans-serif",
-              fontWeight: 300,
-              fontSize: 14,
-              lineHeight: 1.7,
-              color: '#A0A0A0',
-              margin: '0 0 16px 0',
-            }}
-          >
-            {showLocation.description}
-          </p>
+          showLocation.description.startsWith('http') ? (
+            <a
+              href={showLocation.description}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                fontFamily: "'Inter', sans-serif",
+                fontWeight: 300,
+                fontSize: 14,
+                lineHeight: 1.7,
+                color: '#A0A0A0',
+                margin: '0 0 16px 0',
+                display: 'block',
+                textDecoration: 'underline',
+                textUnderlineOffset: 3,
+              }}
+            >
+              {showLocation.description}
+            </a>
+          ) : (
+            <p
+              style={{
+                fontFamily: "'Inter', sans-serif",
+                fontWeight: 300,
+                fontSize: 14,
+                lineHeight: 1.7,
+                color: '#A0A0A0',
+                margin: '0 0 16px 0',
+              }}
+            >
+              {showLocation.description}
+            </p>
+          )
         )}
 
         {/* Coordinates */}
