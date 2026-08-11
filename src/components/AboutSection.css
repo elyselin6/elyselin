@@ -23,7 +23,7 @@
   line-height: 1.75;
   color: rgba(220, 220, 220, 0.88);
   margin: 0;
-  max-width: 420px;
+  max-width: 100%;
 }
 
 .about-section__reads {
@@ -45,11 +45,17 @@
   color: rgba(220, 220, 220, 0.88);
   margin: 0;
   padding-left: 1.25rem;
-  max-width: 420px;
+  max-width: 100%;
 }
 
 .about-section__reads-list li {
   margin-bottom: 4px;
+}
+
+@media (min-width: 769px) {
+  .about-section__reads-list li {
+    white-space: nowrap;
+  }
 }
 
 .about-section__reads-list em {

@@ -80,7 +80,7 @@ export default function AboutSection() {
               <em>The Art of War</em> by Sun Tzu
             </li>
             <li>
-              <em>Drive Your Plow Over The Bones of The Dead</em> by Olga Tokarczuk
+              <em>Drive Your Plow Over The Bones of The Dead</em> by Olga{'\u00A0'}Tokarczuk
             </li>
             <li>
               <em>Range</em> by David Epstein
