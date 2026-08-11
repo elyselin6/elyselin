@@ -28,8 +28,12 @@
 
   body {
     @apply bg-[#050505] text-[#C0C0C0];
-    font-family: 'Inter', sans-serif;
+    font-family: 'Cormorant Garamond', serif;
     overflow: hidden;
-    cursor: crosshair;
+    min-height: 100dvh;
+  }
+
+  #root {
+    min-height: 100dvh;
   }
 }
