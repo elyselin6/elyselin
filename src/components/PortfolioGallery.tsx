@@ -1,6 +1,14 @@
 import './PortfolioGallery.css'
 
-const PORTFOLIO_IMAGES = [
+type PortfolioImage = {
+  id: number
+  src: string
+  alt: string
+  href?: string
+  hoverText?: string
+}
+
+const PORTFOLIO_IMAGES: PortfolioImage[] = [
   {
     id: 1,
     src: '/portfolio/armada-ventures-home.png',
@@ -21,17 +29,23 @@ const PORTFOLIO_IMAGES = [
     id: 4,
     src: '/portfolio/ilona-money-memories.png',
     alt: 'Ilona — Money Memories | Bear and the Bull',
+    hoverText: 'A deck that raised $1,500. Design that converts.',
   },
-] as const
-
-type PortfolioImage = (typeof PORTFOLIO_IMAGES)[number]
+]
 
 function PortfolioItem({ image }: { image: PortfolioImage }) {
   const content = (
-    <img src={image.src} alt={image.alt} loading="lazy" draggable={false} />
+    <>
+      <img src={image.src} alt={image.alt} loading="lazy" draggable={false} />
+      {image.hoverText && (
+        <div className="portfolio-gallery__overlay" aria-hidden="true">
+          <p className="portfolio-gallery__overlay-text">{image.hoverText}</p>
+        </div>
+      )}
+    </>
   )
 
-  if ('href' in image && image.href) {
+  if (image.href) {
     return (
       <a
         href={image.href}
