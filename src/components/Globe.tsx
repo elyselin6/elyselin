@@ -12,6 +12,7 @@ interface GlobeProps {
   onDotClick: (locations: LocationData[]) => void
   onDotHover: (location: LocationData | null) => void
   activeLocationId: string | null
+  isMobile?: boolean
 }
 
 function latLngToVector3(lat: number, lng: number, radius: number): THREE.Vector3 {
@@ -522,7 +523,7 @@ function getMarkerHoverScale(marker: THREE.Object3D): number {
   return getMarkerBaseScale(marker) * 1.4
 }
 
-export default function Globe({ onDotClick, onDotHover, activeLocationId }: GlobeProps) {
+export default function Globe({ onDotClick, onDotHover, activeLocationId, isMobile = false }: GlobeProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const sceneRef = useRef<THREE.Scene | null>(null)
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null)
@@ -1007,7 +1008,7 @@ export default function Globe({ onDotClick, onDotHover, activeLocationId }: Glob
         inset: 0,
         width: '100%',
         height: '100%',
-        cursor: 'crosshair',
+        cursor: isMobile ? 'default' : 'crosshair',
         touchAction: 'none',
       }}
     />

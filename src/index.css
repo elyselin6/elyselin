@@ -31,9 +31,17 @@
     font-family: 'Cormorant Garamond', serif;
     overflow: hidden;
     min-height: 100dvh;
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
   }
 
   #root {
     min-height: 100dvh;
+  }
+
+  button,
+  input,
+  textarea {
+    font: inherit;
   }
 }

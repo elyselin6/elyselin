@@ -75,12 +75,13 @@ export default function AboutSection() {
         </p>
       </div>
 
-      <div className={`about-section__globe-wrap${cardOpen && isMobile ? ' about-section__globe-wrap--card-open' : ''}`}>
+      <div className={`about-section__globe-wrap${cardOpen && !isMobile ? ' about-section__globe-wrap--card-open' : ''}`}>
         <div className="about-section__globe-box">
           <Globe
             onDotClick={handleDotClick}
             onDotHover={handleDotHover}
             activeLocationId={currentLocation?.id ?? null}
+            isMobile={isMobile}
           />
 
           <CoordinatesLabel
@@ -95,7 +96,17 @@ export default function AboutSection() {
         </div>
 
         {currentLocation && (
-          <div className={`about-info-card${isMobile ? ' about-info-card--mobile' : ''}`}>
+          <>
+            {isMobile && (
+              <button
+                type="button"
+                className="about-info-card__backdrop"
+                aria-label="Close location card"
+                onClick={handleCloseCards}
+              />
+            )}
+
+            <div className={`about-info-card${isMobile ? ' about-info-card--mobile' : ''}`}>
             {hasMultipleCards && (
               <button
                 type="button"
@@ -117,6 +128,7 @@ export default function AboutSection() {
               isMobile={isMobile}
             />
           </div>
+          </>
         )}
       </div>
     </div>

@@ -1,4 +1,5 @@
 .app-root {
+  --header-offset: 120px;
   width: 100%;
   min-height: 100dvh;
   background: #000000;
@@ -10,12 +11,16 @@
   z-index: 2;
   height: 100dvh;
   overflow-y: auto;
+  overflow-x: hidden;
   scroll-snap-type: y mandatory;
   scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
 }
 
 .page-section {
   min-height: 100dvh;
+  min-height: 100svh;
   scroll-snap-align: start;
   scroll-snap-stop: always;
   display: flex;
@@ -23,25 +28,27 @@
   align-items: center;
   justify-content: center;
   position: relative;
+  box-sizing: border-box;
 }
 
 .page-section--hero {
   justify-content: center;
-  padding-top: 120px;
+  padding: var(--header-offset) 20px 48px;
 }
 
 .page-section--about {
-  padding: 120px 0 48px;
+  justify-content: center;
+  padding: var(--header-offset) 0 64px;
 }
 
 .page-section--portfolio {
   gap: 48px;
-  padding: 120px 0 48px;
+  padding: var(--header-offset) 0 64px;
   overflow: hidden;
 }
 
 .page-section--contact {
-  padding: 120px 24px 48px;
+  padding: var(--header-offset) 24px max(64px, env(safe-area-inset-bottom));
 }
 
 .hero-tagline {
@@ -52,7 +59,8 @@
   letter-spacing: 0.02em;
   text-align: center;
   margin: 0;
-  padding: 0 32px;
+  padding: 0 16px;
+  max-width: 18ch;
   background: linear-gradient(
     135deg,
     #f0f0f0 0%,
@@ -78,21 +86,55 @@
 
 .portfolio-heading {
   text-align: center;
+  padding: 0 20px;
 }
 
 @media (max-width: 768px) {
-  .page-section--hero {
-    padding-top: 100px;
+  .app-root {
+    --header-offset: 128px;
   }
 
-  .page-section--about,
-  .page-section--portfolio,
-  .page-section--contact {
-    padding-top: 100px;
-    padding-bottom: 32px;
+  .scroll-container {
+    scroll-snap-type: y proximity;
+  }
+
+  .page-section {
+    scroll-snap-stop: normal;
+  }
+
+  .page-section--hero {
+    padding: var(--header-offset) 16px 40px;
+  }
+
+  .page-section--about {
+    justify-content: flex-start;
+    min-height: auto;
+    padding: var(--header-offset) 0 56px;
   }
 
   .page-section--portfolio {
-    gap: 32px;
+    gap: 28px;
+    padding: var(--header-offset) 0 56px;
+  }
+
+  .page-section--contact {
+    justify-content: flex-start;
+    padding: var(--header-offset) 20px max(48px, env(safe-area-inset-bottom));
+  }
+
+  .hero-tagline {
+    font-size: clamp(1.75rem, 8vw, 2.5rem);
+    max-width: 14ch;
+    line-height: 1.25;
+  }
+
+  .section-heading {
+    font-size: clamp(1.75rem, 7vw, 2.25rem);
+  }
+}
+
+@media (max-width: 380px) {
+  .app-root {
+    --header-offset: 140px;
   }
 }

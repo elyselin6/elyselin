@@ -1,0 +1,44 @@
+.social-links {
+  position: fixed;
+  right: 28px;
+  bottom: 28px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.social-links__link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  color: rgba(192, 192, 192, 0.55);
+  transition: color 200ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.social-links__link:hover,
+.social-links__link:focus-visible {
+  color: rgba(192, 192, 192, 0.85);
+}
+
+@media (max-width: 768px) {
+  .social-links {
+    right: 12px;
+    bottom: auto;
+    top: calc(108px + env(safe-area-inset-top, 0px));
+    gap: 4px;
+  }
+
+  .social-links__link {
+    width: 40px;
+    height: 40px;
+  }
+
+  .social-links__link svg {
+    width: 18px;
+    height: 18px;
+  }
+}

@@ -89,6 +89,9 @@
   user-select: none;
   transition: opacity 600ms ease;
   text-align: center;
+  padding: 0 12px;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .about-info-card {
@@ -101,15 +104,30 @@
 }
 
 .about-info-card--mobile {
+  position: fixed;
   left: 0;
   right: 0;
+  bottom: 0;
   top: auto;
-  bottom: -12px;
   transform: none;
   width: 100%;
-  max-height: 52dvh;
+  max-height: min(70dvh, 520px);
   display: flex;
   flex-direction: column;
+  z-index: 40;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.about-info-card__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 35;
+  border: none;
+  padding: 0;
+  margin: 0;
+  background: rgba(0, 0, 0, 0.55);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .about-info-card__next {
@@ -136,8 +154,8 @@
   top: auto;
   bottom: calc(100% + 12px);
   transform: none;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
 }
 
 .about-info-card__next:hover {
@@ -148,27 +166,60 @@
 @media (max-width: 768px) {
   .about-section {
     grid-template-columns: 1fr;
-    gap: 32px;
-    padding: 0 24px;
-    align-content: center;
+    gap: 28px;
+    padding: 0 20px;
+    align-content: start;
+    height: auto;
   }
 
   .about-section__text {
     padding-right: 0;
-    text-align: center;
-    align-items: center;
+    text-align: left;
+    align-items: flex-start;
+    gap: 18px;
   }
 
   .about-section__body {
     max-width: 100%;
+    font-size: 18px;
+    line-height: 1.7;
   }
 
   .about-section__globe-wrap {
-    height: min(50dvh, 420px);
-    min-height: 320px;
+    height: min(42dvh, 340px);
+    min-height: 260px;
+    width: 100%;
   }
 
-  .about-section__globe-wrap--card-open {
-    height: min(36dvh, 280px);
+  .about-section__globe-box {
+    border-radius: 16px;
+  }
+
+  .about-coordinates {
+    left: 12px;
+    bottom: 12px;
+    font-size: 10px;
+    max-width: calc(100% - 24px);
+  }
+
+  .about-hint {
+    bottom: 12px;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+  }
+}
+
+@media (max-width: 380px) {
+  .about-section {
+    padding: 0 16px;
+  }
+
+  .about-section__globe-wrap {
+    height: min(38dvh, 300px);
+    min-height: 240px;
+  }
+
+  .about-section__body {
+    font-size: 17px;
   }
 }

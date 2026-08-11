@@ -49,12 +49,30 @@
 }
 
 @media (max-width: 768px) {
+  .portfolio-gallery {
+    mask-image: linear-gradient(
+      to right,
+      transparent,
+      black 4%,
+      black 96%,
+      transparent
+    );
+  }
+
   .portfolio-gallery__item {
-    width: 300px;
-    height: 200px;
+    width: min(82vw, 320px);
+    height: auto;
+    aspect-ratio: 3 / 2;
   }
 
   .portfolio-gallery__track {
-    gap: 16px;
+    gap: 14px;
+    animation-duration: 32s;
+  }
+}
+
+@media (max-width: 380px) {
+  .portfolio-gallery__item {
+    width: 88vw;
   }
 }
