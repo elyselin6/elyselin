@@ -1,7 +1,8 @@
 import { useState, type FormEvent } from 'react'
 import './ContactSection.css'
 
-const CONTACT_EMAIL = import.meta.env.VITE_CONTACT_EMAIL as string | undefined
+const CONTACT_EMAIL =
+  import.meta.env.VITE_CONTACT_EMAIL || 'elyselin@wharton.upenn.edu'
 
 export default function ContactSection() {
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle')
@@ -73,9 +74,7 @@ export default function ContactSection() {
         )}
         {status === 'error' && (
           <p className="contact-form__feedback contact-form__feedback--error">
-            {CONTACT_EMAIL
-              ? 'Something went wrong. Please try again.'
-              : 'Set VITE_CONTACT_EMAIL in your .env file to enable the contact form.'}
+            Something went wrong. Please try again.
           </p>
         )}
       </form>
