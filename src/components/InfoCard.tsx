@@ -5,6 +5,7 @@ interface InfoCardProps {
   location: LocationData | null
   onClose: () => void
   embedded?: boolean
+  isMobile?: boolean
 }
 
 function getTitleFontSize(name: string, maxWidth = 268): number {
@@ -127,7 +128,7 @@ function PhotoReel({
   )
 }
 
-export default function InfoCard({ location, onClose, embedded = false }: InfoCardProps) {
+export default function InfoCard({ location, onClose, embedded = false, isMobile = false }: InfoCardProps) {
   const [isActive, setIsActive] = useState(false)
   const [displayLocation, setDisplayLocation] = useState<LocationData | null>(null)
   const prevLocationRef = useRef<LocationData | null>(null)
@@ -183,32 +184,45 @@ export default function InfoCard({ location, onClose, embedded = false }: InfoCa
     </span>
   ))
 
+  const mobileEmbedded = embedded && isMobile
+
   return (
     <div
       className="info-card"
       style={{
-        position: embedded ? 'relative' : 'fixed',
-        right: embedded ? undefined : 0,
-        top: embedded ? undefined : '50%',
-        transform: embedded
+        position: mobileEmbedded ? 'relative' : embedded ? 'relative' : 'fixed',
+        right: mobileEmbedded ? undefined : embedded ? undefined : 0,
+        top: mobileEmbedded ? undefined : embedded ? undefined : '50%',
+        bottom: mobileEmbedded ? 0 : undefined,
+        left: mobileEmbedded ? 0 : undefined,
+        transform: mobileEmbedded
           ? isActive
-            ? 'translateX(0)'
-            : 'translateX(100%)'
-          : `translateY(-50%) ${isActive ? 'translateX(0)' : 'translateX(100%)'}`,
-        width: '360px',
-        maxHeight: '580px',
+            ? 'translateY(0)'
+            : 'translateY(100%)'
+          : embedded
+            ? isActive
+              ? 'translateX(0)'
+              : 'translateX(100%)'
+            : `translateY(-50%) ${isActive ? 'translateX(0)' : 'translateX(100%)'}`,
+        width: mobileEmbedded ? '100%' : '360px',
+        maxHeight: mobileEmbedded ? '58dvh' : '580px',
         display: 'flex',
         flexDirection: 'column',
         background: 'rgba(10, 10, 10, 0.92)',
         backdropFilter: 'blur(16px)',
         WebkitBackdropFilter: 'blur(16px)',
-        borderLeft: '1px solid rgba(192, 192, 192, 0.15)',
+        borderLeft: mobileEmbedded ? 'none' : '1px solid rgba(192, 192, 192, 0.15)',
+        borderTop: mobileEmbedded ? '1px solid rgba(192, 192, 192, 0.15)' : undefined,
         padding: 0,
         overflow: 'hidden',
         opacity: isActive ? 1 : 0,
-        transition: 'transform 600ms cubic-bezier(0.16, 1, 0.3, 1), opacity 400ms ease',
+        transition: mobileEmbedded
+          ? 'transform 600ms cubic-bezier(0.16, 1, 0.3, 1), opacity 400ms ease'
+          : 'transform 600ms cubic-bezier(0.16, 1, 0.3, 1), opacity 400ms ease',
         zIndex: 20,
-        borderRadius: '4px 0 0 4px',
+        borderRadius: mobileEmbedded ? '12px 12px 0 0' : '4px 0 0 4px',
+        flex: mobileEmbedded ? 1 : undefined,
+        minHeight: mobileEmbedded ? 0 : undefined,
       }}
     >
       {/* Close button */}
@@ -249,7 +263,7 @@ export default function InfoCard({ location, onClose, embedded = false }: InfoCa
       <div
         style={{
           width: '100%',
-          height: 200,
+          height: isMobile ? 160 : 200,
           flexShrink: 0,
           overflow: 'hidden',
           opacity: isActive ? 1 : 0,
@@ -283,16 +297,17 @@ export default function InfoCard({ location, onClose, embedded = false }: InfoCa
       {/* Content */}
       <div
         style={{
-          padding: '24px 28px 28px',
+          padding: isMobile ? '20px 20px 24px' : '24px 28px 28px',
           overflowY: 'auto',
           flex: 1,
           minHeight: 0,
+          paddingBottom: isMobile ? 'max(24px, env(safe-area-inset-bottom))' : undefined,
         }}
       >
         {/* Title with character animation */}
         <h2
           style={{
-            fontFamily: "'Space Grotesk', sans-serif",
+            fontFamily: "'Cormorant Garamond', serif",
             fontWeight: 600,
             fontSize: titleFontSize,
             color: '#C0C0C0',
@@ -308,7 +323,7 @@ export default function InfoCard({ location, onClose, embedded = false }: InfoCa
         {showLocation.subheading && (
           <span
             style={{
-              fontFamily: "'JetBrains Mono', monospace",
+              fontFamily: "'Cormorant Garamond', serif",
               fontWeight: 400,
               fontSize: 10,
               color: '#808080',
@@ -335,7 +350,7 @@ export default function InfoCard({ location, onClose, embedded = false }: InfoCa
         {showLocation.period && (
           <span
             style={{
-              fontFamily: "'JetBrains Mono', monospace",
+              fontFamily: "'Cormorant Garamond', serif",
               fontWeight: 400,
               fontSize: 11,
               color: '#808080',
@@ -356,7 +371,7 @@ export default function InfoCard({ location, onClose, embedded = false }: InfoCa
               target="_blank"
               rel="noopener noreferrer"
               style={{
-                fontFamily: "'Inter', sans-serif",
+                fontFamily: "'Cormorant Garamond', serif",
                 fontWeight: 300,
                 fontSize: 14,
                 lineHeight: 1.7,
@@ -372,7 +387,7 @@ export default function InfoCard({ location, onClose, embedded = false }: InfoCa
           ) : (
             <p
               style={{
-                fontFamily: "'Inter', sans-serif",
+                fontFamily: "'Cormorant Garamond', serif",
                 fontWeight: 300,
                 fontSize: 14,
                 lineHeight: 1.7,
@@ -388,7 +403,7 @@ export default function InfoCard({ location, onClose, embedded = false }: InfoCa
         {/* Coordinates */}
         <span
           style={{
-            fontFamily: "'JetBrains Mono', monospace",
+            fontFamily: "'Cormorant Garamond', serif",
             fontWeight: 400,
             fontSize: 10,
             color: '#606060',

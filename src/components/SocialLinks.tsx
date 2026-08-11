@@ -14,17 +14,18 @@ function handleLeave(e: React.MouseEvent<HTMLAnchorElement>) {
   e.currentTarget.style.color = 'rgba(192, 192, 192, 0.55)'
 }
 
-export default function SocialLinks() {
+export default function SocialLinks({ compact = false }: { compact?: boolean }) {
   return (
     <div
       style={{
         position: 'fixed',
-        right: 28,
-        bottom: 28,
+        right: compact ? 16 : 28,
+        top: compact ? 16 : undefined,
+        bottom: compact ? undefined : 28,
         zIndex: 10,
         display: 'flex',
         alignItems: 'center',
-        gap: 18,
+        gap: compact ? 14 : 18,
       }}
     >
       <a

@@ -92,11 +92,11 @@ void main() {
   col += vec3(0.09, 0.095, 0.11) * nebula * band * 0.55;
 
   float starField = 0.0;
-  starField += stars(p * 95.0, 0.68, 0.008, 0.018, t, 1.0);
-  starField += stars(p * 72.0 + 3.1, 0.62, 0.010, 0.022, t, 2.0);
-  starField += stars(p * 52.0 + 7.4, 0.56, 0.012, 0.028, t, 3.0);
-  starField += stars(p * 34.0 + 11.2, 0.38, 0.016, 0.038, t, 4.0);
-  starField += stars(p * 20.0 + 15.8, 0.14, 0.022, 0.055, t, 5.0);
+  starField += stars(p * 95.0, 0.544, 0.008, 0.018, t, 1.0);
+  starField += stars(p * 72.0 + 3.1, 0.496, 0.010, 0.022, t, 2.0);
+  starField += stars(p * 52.0 + 7.4, 0.448, 0.012, 0.028, t, 3.0);
+  starField += stars(p * 34.0 + 11.2, 0.304, 0.016, 0.038, t, 4.0);
+  starField += stars(p * 20.0 + 15.8, 0.112, 0.022, 0.055, t, 5.0);
 
   starField *= 1.0 + band * 2.2;
   col += vec3(0.88, 0.91, 1.0) * starField;

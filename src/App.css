@@ -1,42 +1,98 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
+.app-root {
+  width: 100%;
+  min-height: 100dvh;
+  background: #000000;
+  position: relative;
+}
+
+.scroll-container {
+  position: relative;
+  z-index: 2;
+  height: 100dvh;
+  overflow-y: auto;
+  scroll-snap-type: y mandatory;
+  scroll-behavior: smooth;
+}
+
+.page-section {
+  min-height: 100dvh;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.page-section--hero {
+  justify-content: center;
+  padding-top: 120px;
+}
+
+.page-section--about {
+  padding: 120px 0 48px;
+}
+
+.page-section--portfolio {
+  gap: 48px;
+  padding: 120px 0 48px;
+  overflow: hidden;
+}
+
+.page-section--contact {
+  padding: 120px 24px 48px;
+}
+
+.hero-tagline {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  letter-spacing: 0.02em;
+  text-align: center;
+  margin: 0;
+  padding: 0 32px;
+  background: linear-gradient(
+    135deg,
+    #f0f0f0 0%,
+    #b8b8b8 35%,
+    #e0e0e0 60%,
+    #909090 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: none;
+  filter: drop-shadow(0 0 40px rgba(192, 192, 192, 0.15));
+}
+
+.section-heading {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 400;
+  font-size: clamp(2rem, 4vw, 3rem);
+  color: #c0c0c0;
+  margin: 0;
+  letter-spacing: 0.02em;
+}
+
+.portfolio-heading {
   text-align: center;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
-}
-
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
+@media (max-width: 768px) {
+  .page-section--hero {
+    padding-top: 100px;
   }
-  to {
-    transform: rotate(360deg);
+
+  .page-section--about,
+  .page-section--portfolio,
+  .page-section--contact {
+    padding-top: 100px;
+    padding-bottom: 32px;
   }
-}
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
+  .page-section--portfolio {
+    gap: 32px;
   }
-}
-
-.card {
-  padding: 2em;
-}
-
-.read-the-docs {
-  color: #888;
 }

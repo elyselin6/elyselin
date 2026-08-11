@@ -1,0 +1,96 @@
+.contact-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+.contact-section__heading {
+  margin-bottom: 40px;
+}
+
+.contact-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.contact-form__field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(192, 192, 192, 0.6);
+}
+
+.contact-form__field input,
+.contact-form__field textarea {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 16px;
+  letter-spacing: normal;
+  text-transform: none;
+  color: #c0c0c0;
+  background: rgba(192, 192, 192, 0.04);
+  border: 1px solid rgba(192, 192, 192, 0.2);
+  border-radius: 8px;
+  padding: 14px 16px;
+  outline: none;
+  transition: border-color 200ms ease, background 200ms ease;
+  resize: vertical;
+}
+
+.contact-form__field input::placeholder,
+.contact-form__field textarea::placeholder {
+  color: rgba(192, 192, 192, 0.3);
+}
+
+.contact-form__field input:focus,
+.contact-form__field textarea:focus {
+  border-color: rgba(192, 192, 192, 0.45);
+  background: rgba(192, 192, 192, 0.07);
+}
+
+.contact-form__submit {
+  margin-top: 8px;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 18px;
+  font-style: italic;
+  color: #050505;
+  background: linear-gradient(135deg, #e8e8e8, #a8a8a8, #d0d0d0);
+  border: none;
+  border-radius: 8px;
+  padding: 14px 28px;
+  cursor: pointer;
+  transition: opacity 200ms ease, transform 200ms ease;
+}
+
+.contact-form__submit:hover:not(:disabled) {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.contact-form__submit:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.contact-form__feedback {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 15px;
+  text-align: center;
+  margin: 0;
+}
+
+.contact-form__feedback--success {
+  color: rgba(168, 192, 168, 0.9);
+}
+
+.contact-form__feedback--error {
+  color: rgba(192, 128, 128, 0.9);
+}

@@ -537,12 +537,17 @@ export default function Globe({ onDotClick, onDotHover, activeLocationId }: Glob
   const controlsRef = useRef<OrbitControls | null>(null)
   const isAnimatingCameraRef = useRef(false)
   const autoRotatePausedRef = useRef(false)
+  const activeLocationIdRef = useRef(activeLocationId)
   const hasDraggedRef = useRef(false)
   const dragStartRef = useRef({ x: 0, y: 0 })
 
   const handleDotClick = useCallback((clickedLocations: LocationData[]) => {
     onDotClick(clickedLocations)
   }, [onDotClick])
+
+  useEffect(() => {
+    activeLocationIdRef.current = activeLocationId
+  }, [activeLocationId])
 
   useEffect(() => {
     const container = containerRef.current
@@ -556,14 +561,16 @@ export default function Globe({ onDotClick, onDotHover, activeLocationId }: Glob
       sceneRef.current = scene
 
       // Camera
-      const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000)
+      const initialWidth = container.clientWidth || window.innerWidth
+      const initialHeight = container.clientHeight || window.innerHeight
+      const camera = new THREE.PerspectiveCamera(45, initialWidth / initialHeight, 0.1, 1000)
       camera.position.set(0, 0, 240)
       cameraRef.current = camera
 
       // Renderer
       const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true })
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
-      renderer.setSize(window.innerWidth, window.innerHeight)
+      renderer.setSize(initialWidth, initialHeight)
       renderer.domElement.style.width = '100%'
       renderer.domElement.style.height = '100%'
       renderer.domElement.style.display = 'block'
@@ -585,7 +592,12 @@ export default function Globe({ onDotClick, onDotHover, activeLocationId }: Glob
 
       controls.addEventListener('start', () => {
         controls.autoRotate = false
-        autoRotatePausedRef.current = true
+      })
+
+      controls.addEventListener('end', () => {
+        if (!activeLocationIdRef.current && !isAnimatingCameraRef.current) {
+          controls.autoRotate = true
+        }
       })
 
       // Lighting
@@ -694,9 +706,17 @@ export default function Globe({ onDotClick, onDotHover, activeLocationId }: Glob
     ringsRef.current = rings
     outerRingsRef.current = outerRings
 
+    const updatePointerFromClient = (clientX: number, clientY: number) => {
+      const canvas = renderer.domElement
+      const rect = canvas.getBoundingClientRect()
+      if (rect.width === 0 || rect.height === 0) return
+
+      mouseRef.current.x = ((clientX - rect.left) / rect.width) * 2 - 1
+      mouseRef.current.y = -((clientY - rect.top) / rect.height) * 2 + 1
+    }
+
     const trySelectDot = (clientX: number, clientY: number) => {
-      mouseRef.current.x = (clientX / window.innerWidth) * 2 - 1
-      mouseRef.current.y = -(clientY / window.innerHeight) * 2 + 1
+      updatePointerFromClient(clientX, clientY)
 
       raycasterRef.current.setFromCamera(mouseRef.current, camera)
       const intersects = raycasterRef.current.intersectObjects(dots, true)
@@ -744,8 +764,7 @@ export default function Globe({ onDotClick, onDotHover, activeLocationId }: Glob
     }
 
     const onPointerMove = (event: PointerEvent) => {
-      mouseRef.current.x = (event.clientX / window.innerWidth) * 2 - 1
-      mouseRef.current.y = -(event.clientY / window.innerHeight) * 2 + 1
+      updatePointerFromClient(event.clientX, event.clientY)
 
       const totalDrag = Math.hypot(
         event.clientX - dragStartRef.current.x,
@@ -790,11 +809,20 @@ export default function Globe({ onDotClick, onDotHover, activeLocationId }: Glob
 
     // Resize handler
     const onResize = () => {
-      camera.aspect = window.innerWidth / window.innerHeight
+      const width = container.clientWidth
+      const height = container.clientHeight
+      if (width === 0 || height === 0) return
+
+      camera.aspect = width / height
       camera.updateProjectionMatrix()
-      renderer.setSize(window.innerWidth, window.innerHeight)
+      renderer.setSize(width, height)
     }
+
+    const resizeObserver = new ResizeObserver(onResize)
+    resizeObserver.observe(container)
     window.addEventListener('resize', onResize)
+
+    const hoverSupported = window.matchMedia('(hover: hover)').matches
 
     function animate() {
       rafRef.current = requestAnimationFrame(animate)
@@ -809,6 +837,7 @@ export default function Globe({ onDotClick, onDotHover, activeLocationId }: Glob
         if (ring) ring.quaternion.copy(camera.quaternion)
       })
 
+      if (hoverSupported) {
       // Raycasting for hover
       raycasterRef.current.setFromCamera(mouseRef.current, camera)
       const intersects = raycasterRef.current.intersectObjects(dots, true)
@@ -918,6 +947,7 @@ export default function Globe({ onDotClick, onDotHover, activeLocationId }: Glob
           onDotHover(null)
         }
       }
+      }
 
       renderer.render(scene, camera)
     }
@@ -931,6 +961,7 @@ export default function Globe({ onDotClick, onDotHover, activeLocationId }: Glob
       renderer.domElement.removeEventListener('pointermove', onPointerMove)
       renderer.domElement.removeEventListener('pointerup', onPointerUp)
       renderer.domElement.removeEventListener('pointercancel', onPointerUp)
+      resizeObserver.disconnect()
       window.removeEventListener('resize', onResize)
       controls.dispose()
       controlsRef.current = null
@@ -959,11 +990,11 @@ export default function Globe({ onDotClick, onDotHover, activeLocationId }: Glob
 
   // Resume auto-rotate when card closes
   useEffect(() => {
-    if (!activeLocationId && autoRotatePausedRef.current) {
+    if (!activeLocationId && controlsRef.current) {
       autoRotatePausedRef.current = false
-      if (controlsRef.current) {
-        controlsRef.current.autoRotate = true
-      }
+      controlsRef.current.autoRotate = true
+    } else if (activeLocationId && controlsRef.current) {
+      controlsRef.current.autoRotate = false
     }
   }, [activeLocationId])
 
@@ -972,12 +1003,10 @@ export default function Globe({ onDotClick, onDotHover, activeLocationId }: Glob
       ref={containerRef}
       aria-hidden="true"
       style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
+        position: 'absolute',
+        inset: 0,
         width: '100%',
         height: '100%',
-        zIndex: 1,
         cursor: 'crosshair',
         touchAction: 'none',
       }}
