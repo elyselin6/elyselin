@@ -69,9 +69,8 @@ export default function AboutSection() {
           and entrepreneurs that want their brand to match their ambition.
         </p>
         <p className="about-section__body">
-          When she&apos;s not working, she&apos;s usually in the water, on a trail, or on a plane.
-          She&apos;s endlessly curious about food, agriculture, and hospitality — and believes the
-          best way to understand a place is through what it grows and how it eats.
+          Outside of work, she&apos;s usually in the water, on a trail, or on a plane. She&apos;s an
+          avid reader with a deep curiosity for agriculture, hospitality, and art.
         </p>
       </div>
 
