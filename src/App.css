@@ -1,5 +1,6 @@
 .app-root {
   --header-offset: 120px;
+  --electric-blue: #002eff;
   width: 100%;
   min-height: 100dvh;
   background: #000000;
@@ -61,18 +62,8 @@
   margin: 0;
   padding: 0 16px;
   max-width: 18ch;
-  background: linear-gradient(
-    135deg,
-    #f0f0f0 0%,
-    #b8b8b8 35%,
-    #e0e0e0 60%,
-    #909090 100%
-  );
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  text-shadow: none;
-  filter: drop-shadow(0 0 40px rgba(192, 192, 192, 0.15));
+  color: var(--electric-blue);
+  filter: drop-shadow(0 0 32px rgba(0, 46, 255, 0.35));
 }
 
 .section-heading {

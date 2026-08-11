@@ -72,6 +72,21 @@ export default function AboutSection() {
           Outside of work, she&apos;s usually in the water, on a trail, or on a plane. She&apos;s an
           avid reader with a deep curiosity for agriculture, hospitality, and art.
         </p>
+
+        <div className="about-section__reads">
+          <p className="about-section__reads-heading">On My Nightstand</p>
+          <ul className="about-section__reads-list">
+            <li>
+              <em>The Art of War</em> by Sun Tzu
+            </li>
+            <li>
+              <em>Drive Your Plow Over The Bones of The Dead</em> by Olga Tokarczuk
+            </li>
+            <li>
+              <em>Range</em> by David Epstein
+            </li>
+          </ul>
+        </div>
       </div>
 
       <div className={`about-section__globe-wrap${cardOpen && !isMobile ? ' about-section__globe-wrap--card-open' : ''}`}>
