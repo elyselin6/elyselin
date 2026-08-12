@@ -31,6 +31,11 @@ const PORTFOLIO_IMAGES: PortfolioImage[] = [
     alt: 'Ilona — Money Memories | Bear and the Bull',
     hoverText: 'A deck that raised $1,500. Design that converts.',
   },
+  {
+    id: 5,
+    src: '/portfolio/the-wealthy-way.png',
+    alt: 'The Wealthy Way — The Millionaire Mom Next Door',
+  },
 ]
 
 function PortfolioItem({ image }: { image: PortfolioImage }) {
