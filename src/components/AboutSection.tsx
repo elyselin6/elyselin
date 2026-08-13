@@ -1,63 +1,6 @@
-import { useState, useCallback } from 'react'
-import Globe from './Globe'
-import InfoCard from './InfoCard'
-import { type LocationData } from '../data/locations'
-import { useIsMobile } from '../hooks/useMediaQuery'
 import './AboutSection.css'
 
-function CoordinatesLabel({
-  location,
-  isMobile,
-  cardOpen,
-}: {
-  location: LocationData | null
-  isMobile: boolean
-  cardOpen: boolean
-}) {
-  const displayText = location
-    ? `${location.coordinates} · ${location.name.toUpperCase()}`
-    : 'EXPLORE THE WORLD'
-
-  return (
-    <div
-      className={`about-coordinates${isMobile && cardOpen ? ' about-coordinates--hidden' : ''}`}
-    >
-      {displayText}
-    </div>
-  )
-}
-
 export default function AboutSection() {
-  const isMobile = useIsMobile()
-  const [activeLocations, setActiveLocations] = useState<LocationData[]>([])
-  const [activeCardIndex, setActiveCardIndex] = useState(0)
-  const [hoveredLocation, setHoveredLocation] = useState<LocationData | null>(null)
-  const [hintVisible, setHintVisible] = useState(true)
-
-  const handleDotClick = useCallback((locations: LocationData[]) => {
-    setActiveLocations(locations)
-    setActiveCardIndex(0)
-    setHintVisible(false)
-  }, [])
-
-  const handleDotHover = useCallback((location: LocationData | null) => {
-    setHoveredLocation(location)
-  }, [])
-
-  const handleCloseCards = useCallback(() => {
-    setActiveLocations([])
-    setActiveCardIndex(0)
-    setHintVisible(true)
-  }, [])
-
-  const currentLocation = activeLocations[activeCardIndex] ?? null
-  const hasMultipleCards = activeLocations.length > 1
-  const cardOpen = currentLocation !== null
-
-  const goToNextCard = useCallback(() => {
-    setActiveCardIndex((index) => (index + 1) % activeLocations.length)
-  }, [activeLocations.length])
-
   return (
     <div className="about-section">
       <div className="about-section__text">
@@ -89,61 +32,13 @@ export default function AboutSection() {
         </div>
       </div>
 
-      <div className={`about-section__globe-wrap${cardOpen && !isMobile ? ' about-section__globe-wrap--card-open' : ''}`}>
-        <div className="about-section__globe-box">
-          <Globe
-            onDotClick={handleDotClick}
-            onDotHover={handleDotHover}
-            activeLocationId={currentLocation?.id ?? null}
-            isMobile={isMobile}
-          />
-
-          <CoordinatesLabel
-            location={hoveredLocation || currentLocation}
-            isMobile={isMobile}
-            cardOpen={cardOpen}
-          />
-
-          <div className="about-hint" style={{ opacity: hintVisible && activeLocations.length === 0 ? 1 : 0 }}>
-            {isMobile ? 'TAP A DOT TO EXPLORE' : 'CLICK A DOT TO EXPLORE'}
-          </div>
-        </div>
-
-        {currentLocation && (
-          <>
-            {isMobile && (
-              <button
-                type="button"
-                className="about-info-card__backdrop"
-                aria-label="Close location card"
-                onClick={handleCloseCards}
-              />
-            )}
-
-            <div className={`about-info-card${isMobile ? ' about-info-card--mobile' : ''}`}>
-            {hasMultipleCards && (
-              <button
-                type="button"
-                onClick={goToNextCard}
-                aria-label="Next location card"
-                className={`about-info-card__next${isMobile ? ' about-info-card__next--mobile' : ''}`}
-              >
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                  <path d="M5 2L10 7L5 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </button>
-            )}
-
-            <InfoCard
-              key={currentLocation.id}
-              location={currentLocation}
-              onClose={handleCloseCards}
-              embedded
-              isMobile={isMobile}
-            />
-          </div>
-          </>
-        )}
+      <div className="about-section__photo-wrap">
+        <img
+          src="/elyse-lin-about.png"
+          alt="Elyse Lin"
+          className="about-section__photo"
+          loading="lazy"
+        />
       </div>
     </div>
   )

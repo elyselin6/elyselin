@@ -1,14 +1,21 @@
 .contact-section {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: minmax(300px, 1fr) minmax(320px, 1fr);
+  gap: 48px;
   align-items: center;
   width: 100%;
-  max-width: 520px;
+  max-width: 1200px;
   margin: 0 auto;
+  padding: 0 48px;
+}
+
+.contact-section__form-wrap {
+  width: 100%;
+  max-width: 480px;
 }
 
 .contact-section__heading {
-  margin-bottom: 40px;
+  margin-bottom: 32px;
 }
 
 .contact-form {
@@ -95,14 +102,159 @@
   color: rgba(192, 128, 128, 0.9);
 }
 
+.contact-section__globe-wrap {
+  position: relative;
+  height: min(72dvh, 640px);
+  min-height: 400px;
+  transition: height 600ms cubic-bezier(0.16, 1, 0.3, 1);
+  width: 100%;
+}
+
+.contact-section__globe-wrap--card-open {
+  height: min(42dvh, 380px);
+}
+
+.contact-section__globe-box {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 24px;
+  border: 1px solid rgba(192, 192, 192, 0.35);
+  background: rgba(192, 192, 192, 0.04);
+  box-shadow:
+    0 0 60px rgba(192, 192, 192, 0.06),
+    inset 0 0 80px rgba(192, 192, 192, 0.03);
+  overflow: hidden;
+}
+
+.contact-coordinates {
+  position: absolute;
+  left: 20px;
+  bottom: 20px;
+  z-index: 10;
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 400;
+  font-size: 11px;
+  color: #808080;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  pointer-events: none;
+  user-select: none;
+  max-width: calc(100% - 40px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.contact-coordinates--hidden {
+  opacity: 0;
+}
+
+.contact-hint {
+  position: absolute;
+  left: 50%;
+  bottom: 20px;
+  transform: translateX(-50%);
+  z-index: 10;
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 400;
+  font-size: 11px;
+  color: #404040;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  pointer-events: none;
+  user-select: none;
+  transition: opacity 600ms ease;
+  text-align: center;
+  padding: 0 12px;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.contact-info-card {
+  position: absolute;
+  z-index: 20;
+  right: -20px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 340px;
+}
+
+.contact-info-card--mobile {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  top: auto;
+  transform: none;
+  width: 100%;
+  max-height: min(70dvh, 520px);
+  display: flex;
+  flex-direction: column;
+  z-index: 40;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.contact-info-card__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 35;
+  border: none;
+  padding: 0;
+  margin: 0;
+  background: rgba(0, 0, 0, 0.55);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.contact-info-card__next {
+  position: absolute;
+  left: -44px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid rgba(192, 192, 192, 0.25);
+  background: rgba(0, 0, 0, 0.55);
+  color: #c0c0c0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 200ms ease, border-color 200ms ease;
+}
+
+.contact-info-card__next--mobile {
+  left: auto;
+  right: 16px;
+  top: auto;
+  bottom: calc(100% + 12px);
+  transform: none;
+  width: 44px;
+  height: 44px;
+}
+
+.contact-info-card__next:hover {
+  background: rgba(192, 192, 192, 0.12);
+  border-color: rgba(192, 192, 192, 0.45);
+}
+
 @media (max-width: 768px) {
   .contact-section {
+    grid-template-columns: 1fr;
+    gap: 32px;
+    padding: 0 20px;
     max-width: 100%;
-    padding: 0 4px;
+  }
+
+  .contact-section__form-wrap {
+    max-width: 100%;
   }
 
   .contact-section__heading {
-    margin-bottom: 28px;
+    margin-bottom: 24px;
+    text-align: center;
   }
 
   .contact-form {
@@ -118,5 +270,38 @@
   .contact-form__submit {
     width: 100%;
     padding: 16px 28px;
+  }
+
+  .contact-section__globe-wrap {
+    height: min(42dvh, 340px);
+    min-height: 260px;
+  }
+
+  .contact-section__globe-box {
+    border-radius: 16px;
+  }
+
+  .contact-coordinates {
+    left: 12px;
+    bottom: 12px;
+    font-size: 10px;
+    max-width: calc(100% - 24px);
+  }
+
+  .contact-hint {
+    bottom: 12px;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+  }
+}
+
+@media (max-width: 380px) {
+  .contact-section {
+    padding: 0 16px;
+  }
+
+  .contact-section__globe-wrap {
+    height: min(38dvh, 300px);
+    min-height: 240px;
   }
 }
