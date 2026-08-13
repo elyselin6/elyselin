@@ -1,7 +1,8 @@
 import StarfieldBackground from './components/StarfieldBackground'
 import SiteHeader from './components/SiteHeader'
 import AboutSection from './components/AboutSection'
-import PortfolioGallery from './components/PortfolioGallery'
+import PortfolioSection from './components/PortfolioSection'
+import ServicesSection from './components/ServicesSection'
 import ContactSection from './components/ContactSection'
 import SocialLinks from './components/SocialLinks'
 import './App.css'
@@ -23,11 +24,14 @@ export default function App() {
         </section>
 
         <section id="portfolio" className="page-section page-section--portfolio" aria-label="Portfolio">
-          <h2 className="section-heading portfolio-heading">Portfolio</h2>
-          <PortfolioGallery />
+          <PortfolioSection />
         </section>
 
-        <section id="contact" className="page-section page-section--contact" aria-label="Contact">
+        <section id="services" className="page-section page-section--services" aria-label="Services">
+          <ServicesSection />
+        </section>
+
+        <section id="apply" className="page-section page-section--contact" aria-label="Apply">
           <ContactSection />
         </section>
       </main>

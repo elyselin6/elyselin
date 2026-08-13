@@ -57,7 +57,8 @@
   font-family: 'Cormorant Garamond', serif;
   font-size: 17px;
   font-weight: 500;
-  color: var(--electric-blue, #002eff);
+  color: #9F7AEA;
+  text-shadow: 0 0 24px rgba(159, 122, 234, 0.35);
   margin: 0 0 10px;
 }
 

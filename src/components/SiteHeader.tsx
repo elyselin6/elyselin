@@ -4,7 +4,8 @@ const NAV_ITEMS = [
   { id: 'home', label: 'Home' },
   { id: 'about', label: 'About' },
   { id: 'portfolio', label: 'Portfolio' },
-  { id: 'contact', label: 'Contact' },
+  { id: 'services', label: 'Services' },
+  { id: 'apply', label: 'Apply' },
 ] as const
 
 function scrollToSection(id: string) {
