@@ -41,7 +41,6 @@
 
 .services-card:hover,
 .services-card:focus-visible {
-  transform: translateY(-4px);
   border-color: rgba(192, 192, 192, 0.45);
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
   outline: none;
@@ -56,9 +55,8 @@
   transition: transform 400ms ease;
 }
 
-.services-card:hover .services-card__cover,
-.services-card:focus-visible .services-card__cover {
-  transform: scale(1.05);
+.services-card:active {
+  border-color: rgba(192, 192, 192, 0.45);
 }
 
 .services-card__overlay {
@@ -232,8 +230,8 @@
 @media (max-width: 900px) {
   .services-section__grid {
     grid-template-columns: 1fr;
-    max-width: 420px;
-    margin: 0 auto;
+    max-width: none;
+    margin: 0;
   }
 
   .services-card {
@@ -247,23 +245,57 @@
     padding: 0 20px;
   }
 
+  .services-card__content {
+    padding: 20px;
+  }
+
+  .services-card__summary {
+    font-size: 16px;
+    line-height: 1.55;
+  }
+
   .services-modal {
-    padding: 16px;
+    padding: 0;
     align-items: flex-end;
   }
 
   .services-modal__panel {
-    max-height: min(86dvh, 720px);
-    border-radius: 16px 16px 12px 12px;
+    width: 100%;
+    max-height: min(92dvh, 820px);
+    border-radius: 16px 16px 0 0;
     animation: services-slide-up 350ms cubic-bezier(0.16, 1, 0.3, 1);
   }
 
+  .services-modal__close {
+    top: 12px;
+    right: 12px;
+    width: 44px;
+    height: 44px;
+  }
+
   .services-modal__media {
-    height: 200px;
+    height: min(42vw, 220px);
   }
 
   .services-modal__body {
-    padding: 24px 20px 28px;
+    padding: 24px 20px max(28px, env(safe-area-inset-bottom));
+  }
+
+  .services-modal__description,
+  .services-modal__case-study {
+    font-size: 17px;
+  }
+}
+
+@media (hover: hover) {
+  .services-card:hover,
+  .services-card:focus-visible {
+    transform: translateY(-4px);
+  }
+
+  .services-card:hover .services-card__cover,
+  .services-card:focus-visible .services-card__cover {
+    transform: scale(1.05);
   }
 }
 

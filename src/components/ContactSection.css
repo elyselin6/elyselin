@@ -179,6 +179,19 @@
     padding: 12px 14px;
   }
 
+  .contact-form__file {
+    flex-wrap: wrap;
+    align-items: flex-start;
+    min-height: auto;
+    padding: 12px;
+  }
+
+  .contact-form__file-name {
+    flex: 1 1 100%;
+    white-space: normal;
+    line-height: 1.45;
+  }
+
   .contact-form__submit {
     width: 100%;
     padding: 16px 28px;

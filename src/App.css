@@ -4,6 +4,7 @@
   min-height: 100dvh;
   background: #000000;
   position: relative;
+  overflow-x: hidden;
 }
 
 .scroll-container {
@@ -83,7 +84,7 @@
 
 @media (max-width: 768px) {
   .app-root {
-    --header-offset: 128px;
+    --header-offset: 88px;
   }
 
   .scroll-container {
@@ -92,37 +93,39 @@
 
   .page-section {
     scroll-snap-stop: normal;
+    min-height: auto;
   }
 
   .page-section--hero {
-    padding: var(--header-offset) 16px 40px;
+    min-height: 100dvh;
+    min-height: 100svh;
+    padding: calc(var(--header-offset) + 24px) 16px 40px;
   }
 
   .page-section--about {
     justify-content: flex-start;
-    min-height: auto;
-    padding: var(--header-offset) 0 56px;
+    padding: var(--header-offset) 0 max(56px, env(safe-area-inset-bottom));
   }
 
   .page-section--portfolio {
     gap: 28px;
     justify-content: flex-start;
-    padding: var(--header-offset) 0 56px;
+    padding: var(--header-offset) 0 max(56px, env(safe-area-inset-bottom));
   }
 
   .page-section--services {
     justify-content: flex-start;
-    padding: var(--header-offset) 0 56px;
+    padding: var(--header-offset) 0 max(56px, env(safe-area-inset-bottom));
   }
 
   .page-section--contact {
-    justify-content: center;
-    padding: var(--header-offset) 20px max(48px, env(safe-area-inset-bottom));
+    justify-content: flex-start;
+    padding: var(--header-offset) 20px max(56px, env(safe-area-inset-bottom));
   }
 
   .hero-tagline {
     font-size: clamp(1.75rem, 8vw, 2.5rem);
-    max-width: 14ch;
+    max-width: 16ch;
     line-height: 1.25;
   }
 
@@ -133,6 +136,10 @@
 
 @media (max-width: 380px) {
   .app-root {
-    --header-offset: 140px;
+    --header-offset: 84px;
+  }
+
+  .hero-tagline {
+    max-width: 14ch;
   }
 }

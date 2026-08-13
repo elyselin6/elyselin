@@ -100,11 +100,15 @@
     text-align: left;
     align-items: flex-start;
     gap: 18px;
+    order: 2;
   }
 
   .about-section__photo-wrap {
-    width: 160px;
-    height: 208px;
+    width: min(180px, 52vw);
+    height: auto;
+    aspect-ratio: 10 / 13;
+    margin: 0 auto;
+    order: 1;
   }
 
   .about-section__body,

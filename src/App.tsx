@@ -16,7 +16,7 @@ export default function App() {
 
       <main className="scroll-container">
         <section id="home" className="page-section page-section--hero" aria-label="Introduction">
-          <p className="hero-tagline">storytelling through design.</p>
+          <p className="hero-tagline">designs that convert.</p>
         </section>
 
         <section id="about" className="page-section page-section--about" aria-label="About">

@@ -95,21 +95,38 @@
     mask-image: linear-gradient(
       to right,
       transparent,
-      black 4%,
-      black 96%,
+      black 3%,
+      black 97%,
       transparent
     );
   }
 
   .portfolio-gallery__item {
-    width: min(82vw, 320px);
+    width: min(86vw, 340px);
     height: auto;
     aspect-ratio: 3 / 2;
   }
 
   .portfolio-gallery__track {
     gap: 14px;
-    animation-duration: 32s;
+    animation-duration: 36s;
+  }
+
+  .portfolio-gallery__overlay {
+    opacity: 0.92;
+  }
+}
+
+@media (hover: hover) {
+  .portfolio-gallery__item:hover .portfolio-gallery__overlay,
+  .portfolio-gallery__item:focus-within .portfolio-gallery__overlay {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portfolio-gallery__track {
+    animation: none;
   }
 }
 

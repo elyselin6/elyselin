@@ -18,6 +18,10 @@
   );
 }
 
+.site-header__bar {
+  display: contents;
+}
+
 .site-header__title {
   margin: 0;
   font-family: 'Michroma', sans-serif;
@@ -27,6 +31,14 @@
   letter-spacing: 0.12em;
   line-height: 1;
   text-transform: uppercase;
+}
+
+.site-header__menu-toggle {
+  display: none;
+}
+
+.site-header__menu-backdrop {
+  display: none;
 }
 
 .site-header__nav {
@@ -52,7 +64,7 @@
   font-weight: 400;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: rgba(192, 192, 192, 0.45);
+  color: rgba(224, 224, 224, 0.82);
   background: none;
   border: none;
   padding: 10px 4px;
@@ -65,43 +77,152 @@
 
 .site-header__nav-link:hover,
 .site-header__nav-link:focus-visible {
-  color: rgba(192, 192, 192, 0.75);
+  color: rgba(240, 240, 240, 0.98);
 }
 
 @media (max-width: 768px) {
   .site-header {
-    padding: max(14px, env(safe-area-inset-top)) 12px 10px;
+    align-items: stretch;
+    padding: max(12px, env(safe-area-inset-top)) 16px 12px;
+    background: linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0.88) 0%,
+      rgba(0, 0, 0, 0.72) 85%,
+      transparent 100%
+    );
+  }
+
+  .site-header--menu-open {
+    background: rgba(0, 0, 0, 0.96);
+  }
+
+  .site-header__bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+    pointer-events: auto;
   }
 
   .site-header__title {
-    font-size: clamp(1rem, 5.5vw, 1.45rem);
+    font-size: clamp(0.95rem, 4.8vw, 1.25rem);
     letter-spacing: 0.08em;
   }
 
+  .site-header__menu-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+    min-height: 44px;
+    padding: 8px 10px;
+    border: 1px solid rgba(192, 192, 192, 0.25);
+    border-radius: 999px;
+    background: rgba(192, 192, 192, 0.06);
+    color: rgba(224, 224, 224, 0.9);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .site-header__menu-toggle-label {
+    font-family: 'Michroma', sans-serif;
+    font-size: 0.58rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .site-header__menu-icon {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    width: 16px;
+  }
+
+  .site-header__menu-icon span {
+    display: block;
+    height: 1.5px;
+    background: currentColor;
+    border-radius: 1px;
+    transition: transform 200ms ease, opacity 200ms ease;
+  }
+
+  .site-header--menu-open .site-header__menu-icon span:nth-child(1) {
+    transform: translateY(5.5px) rotate(45deg);
+  }
+
+  .site-header--menu-open .site-header__menu-icon span:nth-child(2) {
+    opacity: 0;
+  }
+
+  .site-header--menu-open .site-header__menu-icon span:nth-child(3) {
+    transform: translateY(-5.5px) rotate(-45deg);
+  }
+
+  .site-header__menu-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    border: none;
+    padding: 0;
+    margin: 0;
+    background: transparent;
+    cursor: pointer;
+  }
+
   .site-header__nav {
-    margin-top: 10px;
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: calc(56px + env(safe-area-inset-top, 0px));
+    margin-top: 0;
+    padding: 12px 16px 24px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-8px);
+    transition:
+      opacity 220ms ease,
+      transform 220ms ease,
+      visibility 220ms ease;
+    pointer-events: none;
+  }
+
+  .site-header__nav--open {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    pointer-events: auto;
   }
 
   .site-header__nav-list {
-    gap: 4px 12px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
   }
 
   .site-header__nav-link {
-    font-size: 0.58rem;
-    letter-spacing: 0.1em;
-    padding: 8px 6px;
-    min-height: 40px;
-    min-width: auto;
+    width: 100%;
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    padding: 14px 16px;
+    min-height: 48px;
+    text-align: left;
+    border-radius: 10px;
+  }
+
+  .site-header__nav-link:active {
+    background: rgba(192, 192, 192, 0.08);
   }
 }
 
 @media (max-width: 380px) {
-  .site-header__nav-list {
-    gap: 2px 8px;
+  .site-header {
+    padding-inline: 12px;
   }
 
   .site-header__nav-link {
-    font-size: 0.52rem;
-    letter-spacing: 0.08em;
+    font-size: 0.68rem;
   }
 }
