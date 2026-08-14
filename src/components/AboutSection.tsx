@@ -6,11 +6,11 @@ export default function AboutSection() {
       <div className="about-section__text">
         <h2 className="section-heading">About Me</h2>
         <p className="about-section__body">
-          Elyse is an investor, writer, and operator with experience spanning venture capital,
-          corporate strategy, and real estate across four countries. With a background in Business
-          and International Studies from Penn&apos;s Huntsman Program, she combines industry fluency
-          and creative vision. She builds websites, pitch decks, and brand identities for finance
-          firms and entrepreneurs that want their brand to match their ambition.
+          Elyse brings experience working in venture capital, corporate strategy, and real estate
+          across four countries. With a background in Business and International Studies from
+          Penn&apos;s Huntsman Program, she combines industry fluency and creative vision. She builds
+          websites, pitch decks, and brand identities for finance firms and entrepreneurs that want
+          their brand to match their ambition.
         </p>
         <p className="about-section__body">
           Outside of work, she&apos;s usually in the water, on a trail, or on a plane. She&apos;s an
