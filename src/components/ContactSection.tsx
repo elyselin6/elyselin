@@ -6,6 +6,13 @@ const CONTACT_EMAIL =
 
 const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024
 
+const INQUIRY_OPTIONS = [
+  'Deck Building',
+  'Branding',
+  'Website',
+  'Other',
+] as const
+
 export default function ContactSection() {
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle')
   const [attachmentName, setAttachmentName] = useState<string | null>(null)
@@ -79,6 +86,18 @@ export default function ContactSection() {
           <span>Email</span>
           <input type="email" name="email" required autoComplete="email" placeholder="you@example.com" />
         </label>
+
+        <fieldset className="contact-form__field contact-form__inquiry">
+          <legend>Inquiry</legend>
+          <div className="contact-form__checkbox-group">
+            {INQUIRY_OPTIONS.map((option) => (
+              <label key={option} className="contact-form__checkbox">
+                <input type="checkbox" name="inquiry" value={option} />
+                <span className="contact-form__checkbox-label">{option}</span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
 
         <div className="contact-form__field">
           <span>Attachment</span>
