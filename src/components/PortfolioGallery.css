@@ -21,6 +21,10 @@
   animation-play-state: paused;
 }
 
+.portfolio-gallery--paused .portfolio-gallery__track {
+  animation-play-state: paused;
+}
+
 .portfolio-gallery__item {
   position: relative;
   flex-shrink: 0;
@@ -31,6 +35,21 @@
   border: 1px solid rgba(192, 192, 192, 0.2);
   background: rgba(192, 192, 192, 0.05);
   display: block;
+}
+
+.portfolio-gallery__item--interactive {
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 200ms ease, box-shadow 200ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.portfolio-gallery__item--interactive:hover,
+.portfolio-gallery__item--interactive:focus-visible {
+  border-color: rgba(192, 192, 192, 0.45);
+  box-shadow: 0 0 24px rgba(192, 192, 192, 0.08);
+  outline: none;
 }
 
 .portfolio-gallery__item--link {
@@ -50,6 +69,143 @@
   object-fit: contain;
   object-position: left center;
   display: block;
+  pointer-events: none;
+}
+
+.portfolio-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.portfolio-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  border: none;
+  padding: 0;
+  margin: 0;
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  cursor: pointer;
+  animation: portfolio-fade-in 250ms ease;
+}
+
+.portfolio-modal__panel {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  width: min(720px, 100%);
+  max-height: min(88dvh, 820px);
+  border-radius: 20px;
+  overflow: hidden;
+  border: 1px solid rgba(192, 192, 192, 0.28);
+  background: rgba(8, 8, 8, 0.96);
+  box-shadow:
+    0 24px 80px rgba(0, 0, 0, 0.55),
+    0 0 60px rgba(192, 192, 192, 0.05);
+  animation: portfolio-pop-in 350ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.portfolio-modal__close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 2;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(192, 192, 192, 0.25);
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55);
+  color: #c0c0c0;
+  cursor: pointer;
+  transition: background 200ms ease, transform 200ms ease;
+}
+
+.portfolio-modal__close:hover {
+  background: rgba(192, 192, 192, 0.12);
+  transform: rotate(90deg);
+}
+
+.portfolio-modal__media {
+  width: 100%;
+  height: 240px;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.portfolio-modal__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+}
+
+.portfolio-modal__body {
+  padding: 28px 32px 32px;
+  overflow-y: auto;
+}
+
+.portfolio-modal__panel--text-only .portfolio-modal__body {
+  padding-top: 32px;
+}
+
+.portfolio-modal__title {
+  margin: 0 0 20px;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(2rem, 4vw, 2.5rem);
+  font-weight: 500;
+  color: rgba(240, 240, 240, 0.96);
+}
+
+.portfolio-modal__section + .portfolio-modal__section {
+  margin-top: 20px;
+}
+
+.portfolio-modal__section-heading {
+  margin: 0 0 8px;
+  font-family: 'Michroma', sans-serif;
+  font-size: 0.62rem;
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(216, 228, 236, 0.88);
+}
+
+.portfolio-modal__section-body {
+  margin: 0;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 16px;
+  line-height: 1.75;
+  color: rgba(192, 192, 192, 0.72);
+}
+
+@keyframes portfolio-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes portfolio-pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.94) translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 
 .portfolio-gallery__overlay {
@@ -112,8 +268,46 @@
     animation-duration: 36s;
   }
 
-  .portfolio-gallery__overlay {
-    opacity: 0.92;
+  .portfolio-modal {
+    padding: 0;
+    align-items: flex-end;
+  }
+
+  .portfolio-modal__panel {
+    width: 100%;
+    max-height: min(92dvh, 820px);
+    border-radius: 16px 16px 0 0;
+    animation: portfolio-slide-up 350ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .portfolio-modal__close {
+    top: 12px;
+    right: 12px;
+    width: 44px;
+    height: 44px;
+  }
+
+  .portfolio-modal__media {
+    height: min(42vw, 220px);
+  }
+
+  .portfolio-modal__body {
+    padding: 24px 20px max(28px, env(safe-area-inset-bottom));
+  }
+
+  .portfolio-modal__section-body {
+    font-size: 17px;
+  }
+}
+
+@keyframes portfolio-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 

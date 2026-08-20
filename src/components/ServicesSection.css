@@ -207,6 +207,60 @@
   color: rgba(192, 192, 192, 0.72);
 }
 
+.services-modal__pricing {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(192, 192, 192, 0.15);
+}
+
+.services-modal__pricing-heading {
+  margin: 0 0 12px;
+  font-family: 'Michroma', sans-serif;
+  font-size: 0.62rem;
+  font-weight: 400;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(216, 228, 236, 0.88);
+}
+
+.services-modal__pricing-simple {
+  margin: 0;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 16px;
+  line-height: 1.75;
+  color: rgba(192, 192, 192, 0.72);
+}
+
+.services-modal__pricing-list {
+  margin: 0 0 14px;
+  padding: 0;
+  list-style: none;
+}
+
+.services-modal__pricing-item {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 16px;
+  line-height: 1.75;
+  color: rgba(192, 192, 192, 0.72);
+}
+
+.services-modal__pricing-item + .services-modal__pricing-item {
+  margin-top: 10px;
+}
+
+.services-modal__pricing-name,
+.services-modal__pricing-amount {
+  color: rgba(224, 224, 224, 0.92);
+}
+
+.services-modal__pricing-note {
+  margin: 0;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 15px;
+  line-height: 1.65;
+  color: rgba(192, 192, 192, 0.58);
+}
+
 @keyframes services-fade-in {
   from {
     opacity: 0;
@@ -282,7 +336,9 @@
   }
 
   .services-modal__description,
-  .services-modal__case-study {
+  .services-modal__case-study,
+  .services-modal__pricing-item,
+  .services-modal__pricing-simple {
     font-size: 17px;
   }
 }

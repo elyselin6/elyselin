@@ -1,6 +1,12 @@
 import { useCallback, useEffect, useState } from 'react'
 import './ServicesSection.css'
 
+type PricingTier = {
+  name: string
+  description: string
+  from: string
+}
+
 type Service = {
   id: string
   title: string
@@ -11,6 +17,12 @@ type Service = {
   summary: string
   description: string
   caseStudy?: string
+  pricing?: {
+    startsFrom?: string
+    description?: string
+    tiers?: PricingTier[]
+    note?: string
+  }
 }
 
 const SERVICES: Service[] = [
@@ -27,11 +39,22 @@ const SERVICES: Service[] = [
       'existing pitch deck or investor materials — tightening the narrative, elevating the design, and ' +
       'making sure every slide earns its place. For founders and firms who know what they want to say and ' +
       'need help saying it more beautifully.',
-    caseStudy:
-      'Case Study: When Nicole came to me with a presentation she had prepared for a keynote speaking ' +
-      'event, she knew it was good, but could be better. We refined the font family and color scheme for ' +
-      'legibility, rearranged the graphics and photos, and reorganized the slide flow to tell a more ' +
-      'cohesive story. She was able to walk on stage with a deck that did her ideas justice.',
+    pricing: {
+      tiers: [
+        {
+          name: 'Financial Deck',
+          description: 'fundraising decks, investor pitches, and related materials',
+          from: '$750',
+        },
+        {
+          name: 'Speaker Deck',
+          description: 'keynote presentations and speaking engagements',
+          from: '$350',
+        },
+      ],
+      note:
+        'All projects begin with a complimentary consultation. Final pricing depends on scope and timeline.',
+    },
   },
   {
     id: 'reimagine',
@@ -46,6 +69,9 @@ const SERVICES: Service[] = [
     caseStudy:
       'May include: creating media kits, revising investor documents, website creation, creating pitch ' +
       'deck templates',
+    pricing: {
+      startsFrom: '$2,000',
+    },
   },
   {
     id: 'launch',
@@ -56,12 +82,10 @@ const SERVICES: Service[] = [
     description:
       'Your website is your first impression, your 24/7 pitch, and your proof of legitimacy. ' +
       'Custom build your website that commands attention and converts interest into trust.',
-    caseStudy:
-      'Case Study: A newly launched venture fund needed a website that could speak credibly to two ' +
-      'different audiences: seasoned investors and early-stage founders. Starting from an initial brand ' +
-      'vision, I rebuilt the site from the ground up — introducing motion graphics, refining the visuals, ' +
-      'and tightening the copy to match the fund\'s voice. The result: a polished digital presence ready ' +
-      'for its first investor conversations.',
+    pricing: {
+      description: 'Includes full site creation, revision rounds, and ongoing maintenance. Starting at',
+      startsFrom: '$1,200',
+    },
   },
 ]
 
@@ -172,6 +196,49 @@ export default function ServicesSection() {
               <p className="services-modal__description">{activeService.description}</p>
               {activeService.caseStudy && (
                 <p className="services-modal__case-study">{activeService.caseStudy}</p>
+              )}
+              {activeService.pricing && (
+                <div className="services-modal__pricing">
+                  <p className="services-modal__pricing-heading">Pricing</p>
+                  {activeService.pricing.startsFrom && !activeService.pricing.description && (
+                    <p className="services-modal__pricing-simple">
+                      starts from{' '}
+                      <span className="services-modal__pricing-amount">
+                        {activeService.pricing.startsFrom}
+                      </span>
+                    </p>
+                  )}
+                  {activeService.pricing.description && (
+                    <p className="services-modal__pricing-simple">
+                      {activeService.pricing.description}
+                      {activeService.pricing.startsFrom && (
+                        <>
+                          {' '}
+                          <span className="services-modal__pricing-amount">
+                            {activeService.pricing.startsFrom}
+                          </span>
+                          .
+                        </>
+                      )}
+                    </p>
+                  )}
+                  {activeService.pricing.tiers && activeService.pricing.tiers.length > 0 && (
+                    <ul className="services-modal__pricing-list">
+                      {activeService.pricing.tiers.map((tier) => (
+                        <li key={tier.name} className="services-modal__pricing-item">
+                          <span className="services-modal__pricing-name">{tier.name}</span>
+                          {' — '}
+                          {tier.description}
+                          {' — from '}
+                          <span className="services-modal__pricing-amount">{tier.from}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  {activeService.pricing.note && (
+                    <p className="services-modal__pricing-note">{activeService.pricing.note}</p>
+                  )}
+                </div>
               )}
             </div>
           </div>
